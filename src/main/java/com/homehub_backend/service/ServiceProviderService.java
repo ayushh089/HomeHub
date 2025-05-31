@@ -57,6 +57,7 @@ public class ServiceProviderService {
 
 
         ServiceProvider savedProvider = serviceProviderRepository.save(newProvider);
+        System.out.println("hy");
 
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
 
