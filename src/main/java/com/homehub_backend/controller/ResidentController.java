@@ -17,31 +17,27 @@ public class ResidentController {
     @Autowired
     private ResidentService residentService;
 
-    // Create a new resident
+
     @PostMapping
     public ResponseEntity<Resident> registerResident(@RequestBody UserDto dto) {
         return residentService.createResident(dto);
     }
 
-    // Get all residents
     @GetMapping
     public ResponseEntity<List<Resident>> getAllResidents() {
         return residentService.getAllResidents();
     }
 
-    // Get resident by ID
     @GetMapping("/{id}")
     public ResponseEntity<Resident> getResidentById(@PathVariable UUID id) {
         return residentService.getResidentById(id);
     }
 
-    // Update resident
     @PutMapping("/{id}")
     public ResponseEntity<Resident> updateResident(@PathVariable UUID id, @RequestBody UserDto dto) {
         return residentService.updateResident(id, dto);
     }
 
-    // Delete resident
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteResident(@PathVariable UUID id) {
         return residentService.deleteResident(id);
