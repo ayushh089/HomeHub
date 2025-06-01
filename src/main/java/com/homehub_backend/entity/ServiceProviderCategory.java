@@ -13,6 +13,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "service_provider_categories")
+@Data
+@Builder
 public class ServiceProviderCategory {
     @Id
     @GeneratedValue(generator = "UUID")

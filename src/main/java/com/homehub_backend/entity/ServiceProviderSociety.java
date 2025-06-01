@@ -17,6 +17,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "service_provider_societies")
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ServiceProviderSociety {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -50,10 +54,10 @@ public class ServiceProviderSociety {
         PENDING, APPROVED, REJECTED
     }
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "approved_by")
-    private Users user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by", referencedColumnName = "user_id")
+    private Admin approvedBy;
+
 
 
 }

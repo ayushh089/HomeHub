@@ -16,6 +16,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "service_provider_profiles")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ServiceProvider {
     @Id
