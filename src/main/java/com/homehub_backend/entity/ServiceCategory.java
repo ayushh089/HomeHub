@@ -1,6 +1,7 @@
 package com.homehub_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "service_categories")
+@Data
 public class ServiceCategory {
     @Id
     @GeneratedValue(generator = "UUID")
