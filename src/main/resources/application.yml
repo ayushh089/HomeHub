@@ -1,5 +1,8 @@
 server:
   port: 8081
+springdoc:
+  swagger-ui:
+    enabled:true
 spring:
   application:
     name: homehub-backend
@@ -14,7 +17,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-#  security:
-#    user:
-#      name: 123
-#      password: 123
+  security:
+    user:
+      name: 123
+      password: 123
+jwt:
+  secret: G9X3G7v9SChJbiEZ1eyMbXBnT4XBCV3ztctGb8AXU8c=
+
