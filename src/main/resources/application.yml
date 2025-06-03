@@ -21,6 +21,22 @@ spring:
     user:
       name: 123
       password: 123
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: guptaayush1280@gmail.com
+    password: lvbpparbietpkpjp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  name: HomeHub
+  url: http://localhost:8081
+
 jwt:
   secret: G9X3G7v9SChJbiEZ1eyMbXBnT4XBCV3ztctGb8AXU8c=
 
