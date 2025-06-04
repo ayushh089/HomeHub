@@ -2,10 +2,14 @@ package com.homehub_backend.service;
 
 import com.homehub_backend.dao.ResidentRepository;
 import com.homehub_backend.dao.SocietyRepository;
+import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
+import com.homehub_backend.dto.request.ResidentProfileRequest;
+import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.entity.Resident;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,30 +30,34 @@ public class ResidentService {
     SocietyRepository societyRepository;
     @Autowired
     UserService userService;
+    @Autowired
+    UserRepository userRepository;
 
 
-    public ResponseEntity<Resident> createResident(UserDto dto) {
+    public ResponseEntity<ProfileResponse> createResident(UUID userId, @Valid ResidentProfileRequest profileDto) {
 
-        Users savedUser=userService.addUser(dto);
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        Society mySociety = societyRepository.findById(dto.getSocietyId())
-                .orElseThrow(() -> new RuntimeException("Society not found"));
+        Society mySociety=societyRepository.findById(profileDto.getSocietyId())
+                .orElseThrow(() -> new RuntimeException("Society not found with ID: " + profileDto.getSocietyId()));
 
-        Resident newResident=Resident.builder()
-                .user(savedUser)
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .apartmentNumber(dto.getApartmentNumber())
+        Resident newResident = Resident.builder()
+                .user(user)
+                .firstName(profileDto.getFirstName())
+                .lastName(profileDto.getLastName())
+                .apartmentNumber(profileDto.getApartmentNumber())
                 .society(mySociety)
-                .emergencyContact(dto.getEmergencyContact())
+                .emergencyContact(profileDto.getEmergencyContact())
                 .createdAt(LocalDateTime.now())
 
                 .build();
 
-        Resident savedResident=residentRepository.save(newResident);
-        return new ResponseEntity<>(savedResident, HttpStatus.CREATED);
+        Resident savedResident = residentRepository.save(newResident);
+        return  ResponseEntity.ok(ProfileResponse.complete());
 
     }
+
     public ResponseEntity<List<Resident>> getAllResidents() {
         return new ResponseEntity<>(residentRepository.findAll(), HttpStatus.OK);
     }
@@ -91,6 +99,7 @@ public class ResidentService {
         residentRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
     public ResponseEntity<List<Resident>> getResidentsBySocietyId(UUID societyId) {
         List<Resident> residents = residentRepository.findBySocietyId(societyId);
         return new ResponseEntity<>(residents, HttpStatus.OK);

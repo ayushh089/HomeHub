@@ -45,8 +45,7 @@ public class ServiceProviderDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private UUID userRefId; // Optional: if only referring to existing user
+    private UUID userRefId;
 
-//    private List<UUID> categoryIds; // For setting categories (category_id list)
-//    private List<UUID> societyIds;  // For mapping to societies
+
 }

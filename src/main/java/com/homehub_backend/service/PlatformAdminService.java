@@ -1,9 +1,11 @@
 package com.homehub_backend.service;
 
 import com.homehub_backend.dao.PlatformAdminRepository;
+import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
-import com.homehub_backend.dto.request.PlatformAdminRequest;
+import com.homehub_backend.dto.request.PlatformAdminProfileRequest;
 import com.homehub_backend.dto.response.PlatformAdminResponse;
+import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.entity.PlatformAdmin;
 import com.homehub_backend.entity.Users;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,27 +26,21 @@ public class PlatformAdminService {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    UserRepository userRepository;
 
-    public ResponseEntity<PlatformAdminResponse> createPlatformAdmin(PlatformAdminRequest req) {
-        UserDto userdto = UserDto.builder()
-                .email(req.getEmail())
-                .password(req.getPassword())
-                .phone(req.getPhone())
-                .role(req.getRole())
-                .build();
-        Users savedUser = userService.addUser(userdto);
+    public ResponseEntity<ProfileResponse> createPlatformAdmin(UUID userId,PlatformAdminProfileRequest req) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         PlatformAdmin newPfAdmin = PlatformAdmin.builder()
-                .user(savedUser)
+                .user(user)
                 .firstName(req.getFirstName())
                 .lastName(req.getLastName())
                 .build();
 
         PlatformAdmin savedPfAdmin = platformAdminRepository.save(newPfAdmin);
-
-        PlatformAdminResponse response = mapToResponse(savedUser, savedPfAdmin);
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return  ResponseEntity.ok(ProfileResponse.complete());
     }
 
     public ResponseEntity<PlatformAdminResponse> getPlatformAdminById(UUID id) {
@@ -65,32 +61,32 @@ public class PlatformAdminService {
         return ResponseEntity.ok(responses);
     }
 
-    public ResponseEntity<PlatformAdminResponse> updatePlatformAdmin(UUID id, PlatformAdminRequest req) {
-        Optional<PlatformAdmin> optAdmin = platformAdminRepository.findById(id);
-        if (optAdmin.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        PlatformAdmin existingAdmin = optAdmin.get();
-
-        // Update User fields via UserService (assuming it has updateUser)
-        Users existingUser = existingAdmin.getUser();
-        existingUser.setEmail(req.getEmail());
-        existingUser.setPhone(req.getPhone());
-        existingUser.setRole(req.getRole());
-        // You can add password update logic if needed
-
-        userService.updateUser(existingUser); // implement this method in UserService
-
-        // Update PlatformAdmin fields
-        existingAdmin.setFirstName(req.getFirstName());
-        existingAdmin.setLastName(req.getLastName());
-
-        PlatformAdmin updatedAdmin = platformAdminRepository.save(existingAdmin);
-        PlatformAdminResponse response = mapToResponse(updatedAdmin.getUser(), updatedAdmin);
-
-        return ResponseEntity.ok(response);
-    }
+//    public ResponseEntity<PlatformAdminResponse> updatePlatformAdmin(UUID id, PlatformAdminProfileRequest req) {
+//        Optional<PlatformAdmin> optAdmin = platformAdminRepository.findById(id);
+//        if (optAdmin.isEmpty()) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//
+//        PlatformAdmin existingAdmin = optAdmin.get();
+//
+//        // Update User fields via UserService (assuming it has updateUser)
+//        Users existingUser = existingAdmin.getUser();
+//        existingUser.setEmail(req.getEmail());
+//        existingUser.setPhone(req.getPhone());
+//        existingUser.setRole(req.getRole());
+//        // You can add password update logic if needed
+//
+//        userService.updateUser(existingUser); // implement this method in UserService
+//
+//        // Update PlatformAdmin fields
+//        existingAdmin.setFirstName(req.getFirstName());
+//        existingAdmin.setLastName(req.getLastName());
+//
+//        PlatformAdmin updatedAdmin = platformAdminRepository.save(existingAdmin);
+//        PlatformAdminResponse response = mapToResponse(updatedAdmin.getUser(), updatedAdmin);
+//
+//        return ResponseEntity.ok(response);
+//    }
 
     public ResponseEntity<Void> deletePlatformAdmin(UUID id) {
         Optional<PlatformAdmin> optAdmin = platformAdminRepository.findById(id);

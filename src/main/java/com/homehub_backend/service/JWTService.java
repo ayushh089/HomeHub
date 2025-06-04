@@ -15,6 +15,7 @@ import io.jsonwebtoken.Claims;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -23,9 +24,10 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    public String generateToken(String email,String role) {
+    public String generateToken(String email, String role, UUID userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("userID", userId);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
@@ -40,7 +42,6 @@ public class JWTService {
     }
 
     public String extractUserName(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -71,4 +72,19 @@ public class JWTService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
+    public UUID extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object userIdClaim = claims.get("userID");
+        System.out.println("__hey__");
+
+        if (userIdClaim instanceof String) {
+            return UUID.fromString((String) userIdClaim);
+        } else if (userIdClaim instanceof UUID) {
+            return (UUID) userIdClaim;
+        } else {
+            throw new IllegalArgumentException("Invalid userID format in token");
+        }
+    }
+
 }

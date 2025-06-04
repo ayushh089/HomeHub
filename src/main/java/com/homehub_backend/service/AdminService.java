@@ -3,10 +3,15 @@ package com.homehub_backend.service;
 
 import com.homehub_backend.dao.AdminRepository;
 import com.homehub_backend.dao.SocietyRepository;
+import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
+import com.homehub_backend.dto.request.AdminProfileRequest;
+import com.homehub_backend.dto.request.ResidentProfileRequest;
+import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.entity.Admin;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,24 +29,29 @@ public class AdminService {
     SocietyRepository societyRepository;
     @Autowired
     UserService userService;
+    @Autowired
+    UserRepository userRepository;
 
 
-    public ResponseEntity<Admin> createAdmin(UserDto dto) {
-        Users savedUser=userService.addUser(dto);
-        Society mySociety = societyRepository.findById(dto.getSocietyId())
-                .orElseThrow(() -> new RuntimeException("Society not found"));
+    public ResponseEntity<ProfileResponse> createAdmin(UUID userId, @Valid AdminProfileRequest profileDto) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        Society mySociety=societyRepository.findById(profileDto.getSocietyId())
+                .orElseThrow(() -> new RuntimeException("Society not found with ID: " + profileDto.getSocietyId()));
+
 
         Admin newAdmin=Admin.builder()
-                .user(savedUser)
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
+                .user(user)
+                .firstName(profileDto.getFirstName())
+                .lastName(profileDto.getLastName())
                 .society(mySociety)
                 .createdAt(LocalDateTime.now())
 
                 .build();
 
         Admin savedAdmin=adminRepository.save(newAdmin);
-        return new ResponseEntity<>(savedAdmin, HttpStatus.CREATED);
+        return  ResponseEntity.ok(ProfileResponse.complete());
 
     }
 

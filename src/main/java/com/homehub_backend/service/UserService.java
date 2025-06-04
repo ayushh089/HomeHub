@@ -74,7 +74,7 @@ public class UserService {
 
         if(authentication.isAuthenticated()){
             Users user = userRepository.findByEmail(req.getEmail());
-            return jwtService.generateToken(req.getEmail(),user.getRole());
+            return jwtService.generateToken(req.getEmail(),user.getRole(),user.getId());
         }
         return "LLL";
     }

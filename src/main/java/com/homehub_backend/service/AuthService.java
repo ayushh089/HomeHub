@@ -4,20 +4,23 @@ import com.homehub_backend.dao.UserRepository;
 
 import com.homehub_backend.dto.UserDto;
 import com.homehub_backend.dto.UserRole;
-import com.homehub_backend.dto.request.OtpRequest;
-import com.homehub_backend.dto.request.SignUpRequest;
+import com.homehub_backend.dto.request.*;
+import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.dto.response.SignupResponse;
 import com.homehub_backend.dto.response.VerificationResponse;
 import com.homehub_backend.entity.Users;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AuthService {
     @Autowired
     UserRepository userRepository;
@@ -33,6 +36,15 @@ public class AuthService {
 
     @Autowired
     JWTService jwtService;
+
+    @Autowired
+    ResidentService residentService;
+
+    @Autowired
+    AdminService adminService;
+
+    @Autowired
+    PlatformAdminService platformAdminService;
 
     private String generateVerificationCode() {
         return String.valueOf((int) (Math.random() * 900000) + 100000);
@@ -91,9 +103,21 @@ public class AuthService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // Generate JWT token
-        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+
+        String token = jwtService.generateToken(user.getEmail(), user.getRole(),user.getId());
 
         return ResponseEntity.ok(VerificationResponse.success(token, UserRole.valueOf(user.getRole())));
+    }
+
+    public ResponseEntity<ProfileResponse> completeResidentProfile(UUID userId, @Valid ResidentProfileRequest profileDto) {
+        return residentService.createResident(userId, profileDto);
+    }
+
+    public ResponseEntity<ProfileResponse> completeSocietyAdminProfile(UUID userId, AdminProfileRequest profileDto) {
+        return adminService.createAdmin(userId,profileDto);
+    }
+
+    public ResponseEntity<ProfileResponse> completePlatformAdminProfile(UUID userId, @Valid PlatformAdminProfileRequest profileDto) {
+        return platformAdminService.createPlatformAdmin(userId,profileDto);
     }
 }

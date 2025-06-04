@@ -43,4 +43,5 @@ public class Resident {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
 }

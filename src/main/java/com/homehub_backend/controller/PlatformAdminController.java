@@ -1,6 +1,6 @@
 package com.homehub_backend.controller;
 
-import com.homehub_backend.dto.request.PlatformAdminRequest;
+import com.homehub_backend.dto.request.PlatformAdminProfileRequest;
 import com.homehub_backend.dto.response.PlatformAdminResponse;
 import com.homehub_backend.service.PlatformAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,7 @@ public class PlatformAdminController {
     @Autowired
     private PlatformAdminService platformAdminService;
 
-    @PostMapping
-    public ResponseEntity<PlatformAdminResponse> registerAdmin(@RequestBody PlatformAdminRequest req) {
-        return platformAdminService.createPlatformAdmin(req);
-    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<PlatformAdminResponse> getById(@PathVariable("id") UUID id) {
@@ -33,11 +30,6 @@ public class PlatformAdminController {
         return platformAdminService.getAllPlatformAdmins();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PlatformAdminResponse> updatePlatformAdmin(@PathVariable("id") UUID id,
-                                                                     @RequestBody PlatformAdminRequest req) {
-        return platformAdminService.updatePlatformAdmin(id, req);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlatformAdmin(@PathVariable("id") UUID id) {

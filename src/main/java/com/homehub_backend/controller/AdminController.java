@@ -18,10 +18,7 @@ public class AdminController {
     @Autowired
     AdminService adminService;
 
-    @PostMapping
-    public ResponseEntity<Admin> registerAdmin(@RequestBody UserDto dto) {
-        return adminService.createAdmin(dto);
-    }
+
     @GetMapping
     public ResponseEntity<List<Admin>> getAllAdmins() {
         return adminService.getAllAdmins();

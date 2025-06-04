@@ -18,11 +18,6 @@ public class ResidentController {
     private ResidentService residentService;
 
 
-    @PostMapping
-    public ResponseEntity<Resident> registerResident(@RequestBody UserDto dto) {
-        return residentService.createResident(dto);
-    }
-
     @GetMapping
     public ResponseEntity<List<Resident>> getAllResidents() {
         return residentService.getAllResidents();
