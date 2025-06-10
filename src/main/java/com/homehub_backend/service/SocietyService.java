@@ -53,4 +53,9 @@ public class SocietyService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    public List<Society> getSocietiesByCityAndState(String city, String state) {
+        List<Society> societies=societyRepository.findByCityAndState(city,state);
+        return societies;
+    }
 }

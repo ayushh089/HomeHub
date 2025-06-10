@@ -6,6 +6,7 @@ import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
 import com.homehub_backend.dto.request.ResidentProfileRequest;
 import com.homehub_backend.dto.response.ProfileResponse;
+import com.homehub_backend.dto.response.ResidentProfileResponse;
 import com.homehub_backend.entity.Resident;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
@@ -62,35 +63,23 @@ public class ResidentService {
         return new ResponseEntity<>(residentRepository.findAll(), HttpStatus.OK);
     }
 
-    public ResponseEntity<Resident> getResidentById(UUID id) {
-        return residentRepository.findById(id)
-                .map(resident -> new ResponseEntity<>(resident, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<ResidentProfileResponse> getResidentById(UUID id) {
+      Resident resident=residentRepository.findById(id)
+              .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+
+      ResidentProfileResponse response=ResidentProfileResponse.builder()
+              .societyName(resident.getSociety().getName())
+              .societyId(resident.getSociety().getId())
+              .societyAddress(resident.getSociety().getAddress())
+              .apartmentNumber(resident.getApartmentNumber())
+              .firstName(resident.getFirstName())
+              .lastName(resident.getLastName())
+              .email(resident.getUser().getEmail())
+              .build();
+      return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Resident> updateResident(UUID id, UserDto dto) {
-        Optional<Resident> optionalResident = residentRepository.findById(id);
 
-        if (optionalResident.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        Resident resident = optionalResident.get();
-
-        resident.setFirstName(dto.getFirstName());
-        resident.setLastName(dto.getLastName());
-        resident.setApartmentNumber(dto.getApartmentNumber());
-        resident.setEmergencyContact(dto.getEmergencyContact());
-
-        if (dto.getSocietyId() != null) {
-            Society society = societyRepository.findById(dto.getSocietyId())
-                    .orElseThrow(() -> new RuntimeException("Society not found"));
-            resident.setSociety(society);
-        }
-
-        Resident updatedResident = residentRepository.save(resident);
-        return new ResponseEntity<>(updatedResident, HttpStatus.OK);
-    }
 
     public ResponseEntity<Void> deleteResident(UUID id) {
         if (!residentRepository.existsById(id)) {

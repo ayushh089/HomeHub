@@ -1,6 +1,7 @@
 package com.homehub_backend.controller;
 
 import com.homehub_backend.dto.UserDto;
+import com.homehub_backend.dto.response.ResidentProfileResponse;
 import com.homehub_backend.entity.Resident;
 import com.homehub_backend.service.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +25,15 @@ public class ResidentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resident> getResidentById(@PathVariable UUID id) {
+    public ResponseEntity<ResidentProfileResponse> getResidentById(@PathVariable UUID id) {
+        System.out.println("hey");
         return residentService.getResidentById(id);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Resident> updateResident(@PathVariable UUID id, @RequestBody UserDto dto) {
-        return residentService.updateResident(id, dto);
-    }
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Resident> updateResident(@PathVariable UUID id, @RequestBody UserDto dto) {
+//        return residentService.updateResident(id, dto);
+//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteResident(@PathVariable UUID id) {

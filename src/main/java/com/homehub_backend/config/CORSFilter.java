@@ -30,4 +30,5 @@ public class CORSFilter implements Filter {
     public boolean isLoggable(LogRecord record) {
         return false;
     }
+
 }

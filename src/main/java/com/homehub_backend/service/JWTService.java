@@ -74,6 +74,7 @@ public class JWTService {
     }
 
     public UUID extractUserId(String token) {
+//        System.out.println(token);
         Claims claims = extractAllClaims(token);
         Object userIdClaim = claims.get("userID");
         System.out.println("__hey__");

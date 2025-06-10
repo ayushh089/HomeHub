@@ -66,20 +66,7 @@ public class AdminService {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    public ResponseEntity<Admin> updateAdmin(UUID id, UserDto dto) {
-        return adminRepository.findById(id).map(existing -> {
-            existing.setFirstName(dto.getFirstName());
-            existing.setLastName(dto.getLastName());
 
-            if (dto.getSocietyId() != null) {
-                Society society = societyRepository.findById(dto.getSocietyId())
-                        .orElseThrow(() -> new RuntimeException("Society not found"));
-                existing.setSociety(society);
-            }
-
-            return new ResponseEntity<>(adminRepository.save(existing), HttpStatus.OK);
-        }).orElse(ResponseEntity.notFound().build());
-    }
 
     public ResponseEntity<Void> deleteAdmin(UUID id) {
         return adminRepository.findById(id).map(admin -> {

@@ -22,8 +22,12 @@ import java.util.UUID;
 @Builder
 public class ServiceProvider {
     @Id
-    @Column(name = "user_id")
     private UUID userId;
+
+    @OneToOne
+    @MapsId // Shares the same primary key as User
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -85,11 +89,7 @@ public class ServiceProvider {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Relationships
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "user_id")
-    private Users user;
+
 
     @OneToMany(mappedBy = "serviceProvider", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ServiceProviderCategory> categories = new ArrayList<>();

@@ -1,5 +1,10 @@
 server:
   port: 8081
+  servlet:
+    session:
+      cookie:
+        secure: false
+
 springdoc:
   swagger-ui:
     enabled:true
@@ -32,6 +37,18 @@ spring:
           auth: true
           starttls:
             enable: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
 
 app:
   name: HomeHub
