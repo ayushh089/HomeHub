@@ -50,6 +50,7 @@ spring:
           min-idle: 0
 
 
+
 app:
   name: HomeHub
   url: http://localhost:8081

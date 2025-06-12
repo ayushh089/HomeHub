@@ -18,6 +18,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,7 +98,7 @@ public class AuthService {
         System.out.println(userdto);
         emailService.sendVerificationEmail(user.getEmail(), verificationCode);
 
-        return ResponseEntity.ok(SignupResponse.success(user.getId().toString(), signupDto.getRole()));
+        return ResponseEntity.ok(SignupResponse.success(user.getId().toString(), signupDto.getRole(),user.getEmail()));
     }
 
 
@@ -208,4 +211,11 @@ public class AuthService {
                 .build();
         return dto;
     }
+    public String getCurrentUserId() {
+        System.out.println("hey");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userDetails.getUsername(); // Adjust based on your `UserDetails` implementation
+    }
+
 }

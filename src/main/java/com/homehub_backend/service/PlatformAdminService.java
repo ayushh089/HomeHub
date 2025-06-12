@@ -1,21 +1,27 @@
 package com.homehub_backend.service;
 
+import com.homehub_backend.dao.AdminRepository;
 import com.homehub_backend.dao.PlatformAdminRepository;
+import com.homehub_backend.dao.SocietyRepository;
 import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
 import com.homehub_backend.dto.request.PlatformAdminProfileRequest;
+import com.homehub_backend.dto.response.AdminProfileResponse;
 import com.homehub_backend.dto.response.PlatformAdminResponse;
 import com.homehub_backend.dto.response.ProfileResponse;
+import com.homehub_backend.entity.Admin;
 import com.homehub_backend.entity.PlatformAdmin;
+import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
+import jdk.jfr.Label;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +35,20 @@ public class PlatformAdminService {
     @Autowired
     UserRepository userRepository;
 
-    public ResponseEntity<ProfileResponse> createPlatformAdmin(UUID userId,PlatformAdminProfileRequest req) {
+    @Autowired
+    SocietyService societyService;
+
+    @Autowired
+    SocietyRepository societyRepository;
+
+    @Lazy
+    @Autowired
+    AuthService authService;
+
+    @Autowired
+    AdminRepository adminRepository;
+
+    public ResponseEntity<ProfileResponse> createPlatformAdmin(UUID userId, PlatformAdminProfileRequest req) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
@@ -40,7 +59,7 @@ public class PlatformAdminService {
                 .build();
 
         PlatformAdmin savedPfAdmin = platformAdminRepository.save(newPfAdmin);
-        return  ResponseEntity.ok(ProfileResponse.complete());
+        return ResponseEntity.ok(ProfileResponse.complete());
     }
 
     public ResponseEntity<PlatformAdminResponse> getPlatformAdminById(UUID id) {
@@ -105,5 +124,49 @@ public class PlatformAdminService {
                 .lastName(admin.getLastName())
 
                 .build();
+    }
+
+    public String approveSociety(UUID id) {
+        Society society = societyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Society not found with id: " + id));
+
+        if (society.getApprovalStatus() == Society.ApprovalStatus.APPROVED) {
+            return "Society is already approved.";
+        }
+
+        // Get the currently authenticated platform admin
+        Users user = userRepository.findByEmail(
+                authService.getCurrentUserId()); // You should implement this in AuthService
+        if (!Objects.equals(user.getRole(), "PLATFORM_ADMIN")) {
+            return "No valid User Found";
+        }
+
+        PlatformAdmin admin = platformAdminRepository.findById(user.getId()).orElseThrow(() -> new RuntimeException("PlatformAdmin Not found" + user.getId()));
+
+        society.setApprovalStatus(Society.ApprovalStatus.APPROVED);
+        society.setApprovedAt(LocalDateTime.now());
+        society.setApprovedBy(admin);
+
+        societyRepository.save(society);
+
+        return "Society approved successfully";
+    }
+
+    public ResponseEntity<List<AdminProfileResponse>> getAdminsBySociety(UUID id) {
+            List<Admin> adminList=adminRepository.findBySocietyId(id);
+
+            List<AdminProfileResponse> responseList=new ArrayList<>();
+
+            for(Admin it:adminList){
+//                Users user=userRepository.findById(it.getUserId()).orElseThrow(() -> new RuntimeException("Society not found with id: " + it.getUserId()));
+                AdminProfileResponse res=AdminProfileResponse.builder()
+                        .name(it.getFirstName()+" "+ it.getLastName())
+                        .email(it.getUser().getEmail())
+                        .phone(it.getUser().getPhone())
+                        .build();
+
+                responseList.add(res);
+            }
+            return ResponseEntity.ok(responseList);
     }
 }

@@ -61,9 +61,10 @@ public class AdminService {
     }
 
     public ResponseEntity<Admin> getAdminById(UUID id) {
-        return adminRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Admin admin=adminRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Society not found with ID: " + id));
+
+        return ResponseEntity.ok(admin);
     }
 
 

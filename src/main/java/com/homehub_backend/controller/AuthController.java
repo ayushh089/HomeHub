@@ -72,7 +72,7 @@ public class AuthController {
 
     @PostMapping("/complete-profile/society-admin")
     public ResponseEntity<ProfileResponse> completeSocietyAdminProfile(
-            @RequestHeader("Authorization") String token,
+            @CookieValue("jwt") String token,
             @Valid @RequestBody AdminProfileRequest profileDto) {
         UUID userId = jwtService.extractUserId(token);
         return authService.completeSocietyAdminProfile(userId, profileDto);
@@ -80,7 +80,7 @@ public class AuthController {
 
     @PostMapping("/complete-profile/platform-admin")
     public ResponseEntity<ProfileResponse> completePlatformAdminProfile(
-            @RequestHeader("Authorization") String token,
+            @CookieValue("jwt") String token,
             @Valid @RequestBody PlatformAdminProfileRequest profileDto) {
         UUID userId = jwtService.extractUserId(token);
         return authService.completePlatformAdminProfile(userId, profileDto);
@@ -88,7 +88,7 @@ public class AuthController {
 
     @PostMapping("/complete-profile/service-provider")
     public ResponseEntity<ProfileResponse> completeServiceProviderProfile(
-            @RequestHeader("Authorization") String token,
+            @CookieValue("jwt") String token,
             @Valid @RequestBody ServiceProviderDto profileDto) {
         System.out.println(profileDto);
         UUID userId = jwtService.extractUserId(token);

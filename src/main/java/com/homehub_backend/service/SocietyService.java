@@ -1,12 +1,20 @@
 package com.homehub_backend.service;
 
 import com.homehub_backend.dao.SocietyRepository;
+import com.homehub_backend.dao.UserRepository;
+import com.homehub_backend.dto.request.SocietyRequestDto;
+import com.homehub_backend.dto.response.SocietyFormResponse;
 import com.homehub_backend.entity.Society;
+import com.homehub_backend.entity.Users;
+import com.homehub_backend.events.society.SocietyCreateRequestEvent;
+import com.homehub_backend.events.society.SocietyRegisteredEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,9 +25,53 @@ public class SocietyService {
     @Autowired
     private SocietyRepository societyRepository;
 
-    public ResponseEntity<Society> addSociety(Society st) {
-        Society society = societyRepository.save(st);
-        return ResponseEntity.status(HttpStatus.CREATED).body(society);
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    public ResponseEntity<SocietyFormResponse> addSociety(SocietyRequestDto dto) {
+
+        Users requestedUser = userRepository.findById(dto.getRequestedBy())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+
+        Society society = Society.builder()
+                .name(dto.getName())
+                .address(dto.getAddress())
+                .city(dto.getCity())
+                .state(dto.getState())
+                .pincode(dto.getPincode())
+                .requestedBy(requestedUser)
+                .approvalStatus(Society.ApprovalStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        societyRepository.save(society);
+        System.out.println(society);
+        SocietyFormResponse response= SocietyFormResponse.builder()
+                .societyId(society.getId())
+                .name(society.getName())
+                .address(society.getAddress())
+                .city(society.getCity())
+                .pincode(society.getPincode())
+                .requestedBy(society.getRequestedBy().getId())
+                .email(society.getRequestedBy().getEmail())
+                .number(society.getRequestedBy().getPhone())
+                .build();
+
+
+        eventPublisher.publishEvent(new SocietyCreateRequestEvent(
+                this,
+                response.getRequestedBy(),
+                response.getSocietyId(),
+                response.getName(),
+                response.getEmail()
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     public ResponseEntity<List<Society>> getAllSociety() {

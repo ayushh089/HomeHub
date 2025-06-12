@@ -1,6 +1,7 @@
 package com.homehub_backend.controller;
 
 import com.homehub_backend.dto.request.PlatformAdminProfileRequest;
+import com.homehub_backend.dto.response.AdminProfileResponse;
 import com.homehub_backend.dto.response.PlatformAdminResponse;
 import com.homehub_backend.service.PlatformAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,5 +35,15 @@ public class PlatformAdminController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlatformAdmin(@PathVariable("id") UUID id) {
         return platformAdminService.deletePlatformAdmin(id);
+    }
+
+    @PutMapping("/approveSociety/{id}")
+    public String approveSociety(@PathVariable("id") UUID id){
+        return platformAdminService.approveSociety(id);
+    }
+
+    @GetMapping("/getAdmins/{id}")
+    public ResponseEntity<List<AdminProfileResponse>> getAdminBySocietyId(@PathVariable("id") UUID id) {
+        return platformAdminService.getAdminsBySociety(id);
     }
 }

@@ -35,6 +35,7 @@ public class AdminController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Admin> getAdminById(@PathVariable UUID id) {
+        System.out.println("hey");
         return adminService.getAdminById(id);
     }
 

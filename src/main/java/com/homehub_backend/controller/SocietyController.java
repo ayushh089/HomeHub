@@ -1,6 +1,8 @@
 package com.homehub_backend.controller;
 
+import com.homehub_backend.dto.request.SocietyRequestDto;
 import com.homehub_backend.dto.response.ServiceProviderApprovalReqResponse;
+import com.homehub_backend.dto.response.SocietyFormResponse;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.service.ServiceProviderSocietyService;
 import com.homehub_backend.service.SocietyService;
@@ -24,7 +26,7 @@ public class SocietyController {
     ServiceProviderSocietyService serviceProviderSocietyService;
 
     @PostMapping
-    public ResponseEntity<Society> registerSociety(@RequestBody Society st) {
+    public ResponseEntity<SocietyFormResponse> registerSociety(@RequestBody SocietyRequestDto st) {
         System.out.println(st);
         return societyService.addSociety(st);
     }
