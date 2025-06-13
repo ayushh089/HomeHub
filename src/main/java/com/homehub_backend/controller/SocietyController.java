@@ -2,6 +2,7 @@ package com.homehub_backend.controller;
 
 import com.homehub_backend.dto.request.SocietyRequestDto;
 import com.homehub_backend.dto.response.ServiceProviderApprovalReqResponse;
+import com.homehub_backend.dto.response.SocietyDataResponse;
 import com.homehub_backend.dto.response.SocietyFormResponse;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.service.ServiceProviderSocietyService;
@@ -36,6 +37,8 @@ public class SocietyController {
         return societyService.getAllSociety();
     }
 
+
+
     @GetMapping("/{id}")
     public ResponseEntity<Society> getSocietyById(@PathVariable UUID id) {
         return societyService.getSocietyById(id);
@@ -63,9 +66,14 @@ public class SocietyController {
     }
 
     @GetMapping("/getSocieties")
-    public ResponseEntity<List<Society>> getListByCityAndState(@RequestParam String city,
-                                                               @RequestParam String state){
-        List<Society> societies=societyService.getSocietiesByCityAndState(city, state);
+    public ResponseEntity<List<SocietyDataResponse>> getListByCityAndState(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String status
+    ) {
+        List<SocietyDataResponse> societies = societyService.getSocietiesByCityAndState(city, state, status);
         return ResponseEntity.ok(societies);
     }
+
+
 }

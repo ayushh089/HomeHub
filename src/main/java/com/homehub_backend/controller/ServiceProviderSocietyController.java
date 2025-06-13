@@ -20,7 +20,7 @@ public class ServiceProviderSocietyController {
     ServiceProviderSocietyService serviceProviderSocietyService;
 
     @PostMapping
-    @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+//    @PreAuthorize("hasRole('SERVICE_PROVIDER')")
     public ResponseEntity<ServiceProviderSocietyResponse> addServiceProviderSociety(
             @RequestBody ServiceProviderSocietyRequest request
     ) {

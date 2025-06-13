@@ -3,6 +3,7 @@ package com.homehub_backend.controller;
 import com.homehub_backend.dto.ServiceProviderDto;
 import com.homehub_backend.dto.UserDto;
 import com.homehub_backend.dto.request.ApprovalRequest;
+import com.homehub_backend.dto.response.AdminProfileResponse;
 import com.homehub_backend.entity.Admin;
 import com.homehub_backend.service.AdminService;
 import com.homehub_backend.service.ServiceProviderSocietyService;
@@ -34,7 +35,7 @@ public class AdminController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Admin> getAdminById(@PathVariable UUID id) {
+    public ResponseEntity<AdminProfileResponse> getAdminById(@PathVariable UUID id) {
         System.out.println("hey");
         return adminService.getAdminById(id);
     }
@@ -46,7 +47,7 @@ public class AdminController {
     }
 
     @PutMapping("/service-providers/{serviceProviderSocietyId}/approval")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceProviderDto> approveOrRejectSP(
             @PathVariable UUID serviceProviderSocietyId,
             @RequestBody ApprovalRequest approvalRequest,

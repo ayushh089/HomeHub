@@ -25,6 +25,8 @@ public class ServiceProviderProfile {
     private String address;
     private String city;
     private String state;
+    private String phone;
+    private String email;
     private String pincode;
     private LocalTime availableHoursStart;
     private LocalTime availableHoursEnd;

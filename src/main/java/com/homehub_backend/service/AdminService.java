@@ -7,6 +7,7 @@ import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.UserDto;
 import com.homehub_backend.dto.request.AdminProfileRequest;
 import com.homehub_backend.dto.request.ResidentProfileRequest;
+import com.homehub_backend.dto.response.AdminProfileResponse;
 import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.entity.Admin;
 import com.homehub_backend.entity.Society;
@@ -60,11 +61,16 @@ public class AdminService {
         return ResponseEntity.ok(adminRepository.findAll());
     }
 
-    public ResponseEntity<Admin> getAdminById(UUID id) {
+    public ResponseEntity<AdminProfileResponse> getAdminById(UUID id) {
         Admin admin=adminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Society not found with ID: " + id));
 
-        return ResponseEntity.ok(admin);
+        AdminProfileResponse res=AdminProfileResponse.builder()
+                .name(admin.getFirstName()+" "+admin.getLastName())
+                .societyId(admin.getSociety().getId())
+                .build();
+
+        return ResponseEntity.ok(res);
     }
 
 

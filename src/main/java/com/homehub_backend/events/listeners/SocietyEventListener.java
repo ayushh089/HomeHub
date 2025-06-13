@@ -2,6 +2,7 @@ package com.homehub_backend.events.listeners;
 
 import com.homehub_backend.events.society.SocietyCreateRequestEvent;
 import com.homehub_backend.events.society.SocietyRegisteredEvent;
+import com.homehub_backend.events.society.SocietyRequestAcceptedEvent;
 import com.homehub_backend.service.EmailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,29 @@ public class SocietyEventListener {
                 event.getAdminEmail(),
                 event.getSocietyName(),
                 event.getSocietyId()
+        );
+
+        // Create society admin dashboard
+//        notificationService.createAdminDashboard(event.getSocietyId());
+//
+//        // Log audit event
+//        auditService.logEvent(
+//                "SOCIETY_REGISTERED",
+//                event.getSocietyId(),
+//                event.getUserId(),
+//                "Society " + event.getSocietyName() + " registered successfully"
+//        );
+    }
+    @EventListener
+    public void handleSocietyRequestAcceptEvent(SocietyRequestAcceptedEvent event) {
+        log.info("Handling SocietyRegisteredEvent for society: {}", event.getSocietyName());
+
+        // Send welcome email to admin
+        emailService.societyWelcomeMessage(
+                event.getAdminEmail(),
+                event.getSocietyName(),
+                event.getSocietyId(),
+                event.getAcceptedDate()
         );
 
         // Create society admin dashboard

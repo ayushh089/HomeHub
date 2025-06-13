@@ -87,6 +87,9 @@ public class ServiceProviderService {
 
             for (ServiceProviderSociety sps : serviceProviderList) {
                 ServiceProvider serviceProvider = sps.getServiceProvider();
+                Users user=userRepository.findById(serviceProvider.getUserId())
+                        .orElseThrow(() -> new RuntimeException("User not found with ID: " + serviceProvider.getUserId()));
+
 
                 // Get categories - filtered if category parameter is provided
                 List<ServiceProviderCategory> spCategories;
@@ -97,12 +100,10 @@ public class ServiceProviderService {
                             .findByServiceProviderIdAndCategoryId(serviceProvider.getUserId(), category);
                 }
 
-                // Skip providers that don't have any matching categories when filtering
                 if (category != null && spCategories.isEmpty()) {
                     continue;
                 }
 
-                // Map ServiceProviderCategories to ProviderCategory DTOs
                 List<ServiceProviderProfile.ProviderCategory> providerCategories = spCategories.stream()
                         .map(spc -> ServiceProviderProfile.ProviderCategory.builder()
                                 .categoryId(spc.getCategory().getId())
@@ -132,6 +133,8 @@ public class ServiceProviderService {
                         .pincode(serviceProvider.getPincode())
                         .availableHoursStart(serviceProvider.getAvailableHoursStart())
                         .availableHoursEnd(serviceProvider.getAvailableHoursEnd())
+                        .phone(user.getPhone())
+                        .email(user.getEmail())
                         .isAvailable(serviceProvider.getIsAvailable())
                         .categories(providerCategories)
                         .build();

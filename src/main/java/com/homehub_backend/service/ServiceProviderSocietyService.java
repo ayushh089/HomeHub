@@ -53,9 +53,9 @@ public class ServiceProviderSocietyService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new RuntimeException("Society not found"));
 
-
-        System.out.println(society);
-        System.out.println(serviceProvider);
+//
+//        System.out.println(society);
+//        System.out.println(serviceProvider);
 
 
          ServiceProviderSociety spSociety = ServiceProviderSociety.builder()

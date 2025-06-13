@@ -30,7 +30,6 @@ public class ServiceProviderController {
 public ResponseEntity<List<ServiceProviderProfile>> getServiceProviderBySocietyId(
         @PathVariable UUID societyId,
         @RequestParam(required = false,value = "") UUID category) {
-    System.out.println(societyId);
 
 return serviceProviderService.getListBySocietyId(societyId,category);
 

@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface SocietyRepository extends JpaRepository<Society, UUID> {
     List<Society> findByCityAndState(String city, String state);
+    List<Society> findByApprovalStatus(Society.ApprovalStatus approvalStatus);
 }

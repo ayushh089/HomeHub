@@ -21,6 +21,8 @@ public class PlatformAdminController {
 
 
 
+
+
     @GetMapping("/{id}")
     public ResponseEntity<PlatformAdminResponse> getById(@PathVariable("id") UUID id) {
         return platformAdminService.getPlatformAdminById(id);
@@ -38,8 +40,12 @@ public class PlatformAdminController {
     }
 
     @PutMapping("/approveSociety/{id}")
-    public String approveSociety(@PathVariable("id") UUID id){
+    public ResponseEntity<String> approveSociety(@PathVariable("id") UUID id){
         return platformAdminService.approveSociety(id);
+    }
+    @DeleteMapping("/rejectSociety/{id}")
+    public ResponseEntity<String> rejectSociety(@PathVariable("id") UUID id){
+        return platformAdminService.declineSociety(id);
     }
 
     @GetMapping("/getAdmins/{id}")

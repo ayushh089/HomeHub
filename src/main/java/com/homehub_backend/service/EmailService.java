@@ -10,6 +10,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,7 +26,7 @@ public class EmailService {
     @Value("${app.name:HomeHub}")
     private String appName;
 
-    @Value("${app.url:http://localhost:8081}")
+    @Value("${app.url:http://localhost:5173}")
     private String appUrl;
 
     @Async
@@ -98,6 +100,30 @@ public class EmailService {
 
         return CompletableFuture.completedFuture(null);
 
+    }
+
+    public CompletableFuture<Void> societyWelcomeMessage(String adminEmail, String societyName, UUID societyId, LocalDateTime acceptedDate) {
+        try {
+            appUrl=appUrl+"/complete-profile/admin";
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(adminEmail);
+            helper.setFrom(fromEmail);
+            helper.setSubject("Welcome to " + appName + "!");
+
+            String htmlContent = buildSocietyAcceptedConfirmationTemplate(societyName,acceptedDate, appName, appUrl);
+            helper.setText(htmlContent, true);
+
+            javaMailSender.send(message);
+            System.out.println("Welcome email sent successfully to: " + adminEmail);
+
+        } catch (MessagingException e) {
+            System.err.println("Failed to send welcome email to " + adminEmail + ": " + e.getMessage());
+            // Don't throw exception for welcome email failure
+        }
+
+        return CompletableFuture.completedFuture(null);
     }
 
 
@@ -285,6 +311,59 @@ public class EmailService {
         </body>
         </html>
     """, societyName, appName, appUrl);
+    }
+
+    private String buildSocietyAcceptedConfirmationTemplate(String societyName, LocalDateTime acceptedDate, String appName, String appUrl) {
+        return String.format("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Welcome to %3$s</title>
+            <style>
+                body { font-family: Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px; }
+                .container { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+                .header { text-align: center; }
+                .header h1 { color: #2563eb; }
+                .content { margin-top: 20px; color: #374151; font-size: 16px; line-height: 1.6; }
+                .society-name { font-size: 20px; font-weight: bold; color: #111827; }
+                .date { font-size: 14px; color: #6b7280; }
+                .footer { margin-top: 30px; font-size: 13px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+                .button {
+                    display: inline-block;
+                    margin-top: 20px;
+                    background-color: #2563eb;
+                    color: white !important;
+                    padding: 12px 24px;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: 500;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Welcome to %3$s!</h1>
+                </div>
+                <div class="content">
+                    <p>We are excited to inform you that your society <span class="society-name">%1$s</span> has been successfully added to our platform on <span class="date">%2$s</span>.</p>
+
+                    <p>To get started, please complete your profile so you can manage your society and access all features.</p>
+
+                    <a href="%4$s" class="button">Complete Your Profile</a>
+
+                    <p>If you need assistance, feel free to contact our support team.</p>
+                </div>
+
+                <div class="footer">
+                    &copy; 2024 %3$s. All rights reserved.
+                </div>
+            </div>
+        </body>
+        </html>
+    """, societyName, acceptedDate.toString(), appName, appUrl);
     }
 
 

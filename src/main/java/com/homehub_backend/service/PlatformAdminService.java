@@ -13,8 +13,10 @@ import com.homehub_backend.entity.Admin;
 import com.homehub_backend.entity.PlatformAdmin;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
+import com.homehub_backend.events.society.SocietyRequestAcceptedEvent;
 import jdk.jfr.Label;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,10 @@ public class PlatformAdminService {
 
     @Autowired
     AdminRepository adminRepository;
+
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public ResponseEntity<ProfileResponse> createPlatformAdmin(UUID userId, PlatformAdminProfileRequest req) {
         Users user = userRepository.findById(userId)
@@ -126,19 +132,22 @@ public class PlatformAdminService {
                 .build();
     }
 
-    public String approveSociety(UUID id) {
+    public ResponseEntity<String> approveSociety(UUID id) {
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Society not found with id: " + id));
 
+        Users societyAdmin=userRepository.findById(society.getRequestedBy().getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + society.getRequestedBy().getId()));
+
         if (society.getApprovalStatus() == Society.ApprovalStatus.APPROVED) {
-            return "Society is already approved.";
+            return ResponseEntity.ok("Society is already approved.");
         }
 
         // Get the currently authenticated platform admin
         Users user = userRepository.findByEmail(
                 authService.getCurrentUserId()); // You should implement this in AuthService
         if (!Objects.equals(user.getRole(), "PLATFORM_ADMIN")) {
-            return "No valid User Found";
+            return ResponseEntity.ok("No valid User Found");
         }
 
         PlatformAdmin admin = platformAdminRepository.findById(user.getId()).orElseThrow(() -> new RuntimeException("PlatformAdmin Not found" + user.getId()));
@@ -148,25 +157,57 @@ public class PlatformAdminService {
         society.setApprovedBy(admin);
 
         societyRepository.save(society);
+        eventPublisher.publishEvent(new SocietyRequestAcceptedEvent(
+                this,
+                user.getId(),
+                society.getId(),
+                society.getName(),
+                societyAdmin.getEmail(),
+                society.getApprovedAt()
+        ));
 
-        return "Society approved successfully";
+        return ResponseEntity.ok("Society approved successfully");
+}
+
+
+    public ResponseEntity<String> declineSociety(UUID id) {
+        Society society = societyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Society not found with id: " + id));
+
+        if (society.getApprovalStatus() == Society.ApprovalStatus.APPROVED) {
+            return ResponseEntity.ok("Society is already approved.");
+        }
+
+        // Get the currently authenticated platform admin
+        Users user = userRepository.findByEmail(
+                authService.getCurrentUserId()); // You should implement this in AuthService
+        if (!Objects.equals(user.getRole(), "PLATFORM_ADMIN")) {
+            return ResponseEntity.ok("No valid User Found");
+        }
+
+        PlatformAdmin admin = platformAdminRepository.findById(user.getId()).orElseThrow(() -> new RuntimeException("PlatformAdmin Not found" + user.getId()));
+
+
+        societyRepository.delete(society);
+
+        return ResponseEntity.ok("Society rejected successfully");
     }
 
     public ResponseEntity<List<AdminProfileResponse>> getAdminsBySociety(UUID id) {
-            List<Admin> adminList=adminRepository.findBySocietyId(id);
+        List<Admin> adminList = adminRepository.findBySocietyId(id);
 
-            List<AdminProfileResponse> responseList=new ArrayList<>();
+        List<AdminProfileResponse> responseList = new ArrayList<>();
 
-            for(Admin it:adminList){
+        for (Admin it : adminList) {
 //                Users user=userRepository.findById(it.getUserId()).orElseThrow(() -> new RuntimeException("Society not found with id: " + it.getUserId()));
-                AdminProfileResponse res=AdminProfileResponse.builder()
-                        .name(it.getFirstName()+" "+ it.getLastName())
-                        .email(it.getUser().getEmail())
-                        .phone(it.getUser().getPhone())
-                        .build();
+            AdminProfileResponse res = AdminProfileResponse.builder()
+                    .name(it.getFirstName() + " " + it.getLastName())
+                    .email(it.getUser().getEmail())
+                    .phone(it.getUser().getPhone())
+                    .build();
 
-                responseList.add(res);
-            }
-            return ResponseEntity.ok(responseList);
+            responseList.add(res);
+        }
+        return ResponseEntity.ok(responseList);
     }
 }
