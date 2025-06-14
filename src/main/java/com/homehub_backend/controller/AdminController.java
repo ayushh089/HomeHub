@@ -46,10 +46,11 @@ public class AdminController {
         return adminService.getAdminsBySociety(societyId);
     }
 
-    @PutMapping("/service-providers/{serviceProviderSocietyId}/approval")
+    @PutMapping("/service-providers/approval")
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceProviderDto> approveOrRejectSP(
-            @PathVariable UUID serviceProviderSocietyId,
+            @RequestParam UUID societyId,
+            @RequestParam UUID serviceProviderId,
             @RequestBody ApprovalRequest approvalRequest,
             Authentication authentication) {
 
@@ -59,7 +60,7 @@ public class AdminController {
             System.out.println(adminEmail);
 
             return serviceProviderSocietyService
-                    .updateApprovalStatus(serviceProviderSocietyId, approvalRequest, adminEmail);
+                    .updateApprovalStatus(societyId,serviceProviderId, approvalRequest, adminEmail);
 
 
 

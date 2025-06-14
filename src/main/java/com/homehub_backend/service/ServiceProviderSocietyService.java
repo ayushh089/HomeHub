@@ -5,6 +5,7 @@ import com.homehub_backend.dto.ServiceProviderDto;
 import com.homehub_backend.dto.request.ApprovalRequest;
 import com.homehub_backend.dto.request.ServiceProviderSocietyRequest;
 import com.homehub_backend.dto.response.ServiceProviderApprovalReqResponse;
+import com.homehub_backend.dto.response.ServiceProviderProfile;
 import com.homehub_backend.dto.response.ServiceProviderSocietyResponse;
 import com.homehub_backend.entity.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,23 +55,17 @@ public class ServiceProviderSocietyService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new RuntimeException("Society not found"));
 
-//
-//        System.out.println(society);
-//        System.out.println(serviceProvider);
 
-
-         ServiceProviderSociety spSociety = ServiceProviderSociety.builder()
+        ServiceProviderSociety spSociety = ServiceProviderSociety.builder()
                 .isPreferred(request.getIsPreferred() != null && request.getIsPreferred())
-                 .approvalStatus(
-                         request.getApprovalStatus() != null
-                                 ? ServiceProviderSociety.ApprovalStatus.valueOf(request.getApprovalStatus())
-                                 : ServiceProviderSociety.ApprovalStatus.PENDING // <-- or whatever default you want
-                 )
-//                .approvedAt(LocalDateTime.now())
+                .approvalStatus(
+                        request.getApprovalStatus() != null
+                                ? ServiceProviderSociety.ApprovalStatus.valueOf(request.getApprovalStatus())
+                                : ServiceProviderSociety.ApprovalStatus.PENDING // <-- or whatever default you want
+                )
                 .createdAt(LocalDateTime.now())
                 .serviceProvider(serviceProvider)
                 .society(society)
-//                .approvedBy(approvedByUser)
                 .build();
 
         ServiceProviderSociety saved = serviceProviderSocietyRepository.save(spSociety);
@@ -78,11 +74,9 @@ public class ServiceProviderSocietyService {
                 .id(saved.getId())
                 .isPreferred(saved.getIsPreferred())
                 .approvalStatus(saved.getApprovalStatus().name())
-//                .approvedAt(saved.getApprovedAt())
                 .createdAt(saved.getCreatedAt())
                 .serviceProviderId(serviceProvider.getUserId())
                 .societyId(society.getId())
-//                .approvedByUserId(approvedByUser != null ? approvedByUser.getUserId() : null)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -90,7 +84,6 @@ public class ServiceProviderSocietyService {
 
     public List<ServiceProviderApprovalReqResponse> getServiceProviderRequestsBySocietyId(UUID societyId) {
         List<ServiceProviderSociety> requests = serviceProviderSocietyRepository.findBySocietyIdAndApprovalStatus(societyId, ServiceProviderSociety.ApprovalStatus.PENDING);
-//        List<ServiceProviderSociety> requests = serviceProviderSocietyRepository.findBySocietyId(societyId);
         return mapToResponseList(requests);
     }
 
@@ -146,14 +139,14 @@ public class ServiceProviderSocietyService {
                 .build();
     }
 
-    public ResponseEntity<ServiceProviderDto> updateApprovalStatus(UUID serviceProviderSocietyId,
+    public ResponseEntity<ServiceProviderDto> updateApprovalStatus(UUID societyId,UUID serviceProviderId,
                                                                    ApprovalRequest request,
                                                                    String adminEmail) {
 
 
         ServiceProviderSociety serviceProviderSociety = serviceProviderSocietyRepository
-                .findById(serviceProviderSocietyId)
-                .orElseThrow(() -> new EntityNotFoundException("Service Provider Society not found with id: " + serviceProviderSocietyId));
+                .findByServiceProviderUserIdAndSocietyId(serviceProviderId,societyId);
+
 
         // Find the admin making the approval/rejection
         Users user = userRepository.findByEmail(adminEmail);
@@ -178,5 +171,62 @@ public class ServiceProviderSocietyService {
 
         // Return the service provider information
         return ResponseEntity.ok(ServiceProviderDto.status(status, sp.getFirstName(), sp.getLastName(), sp.getBusinessName()));
+    }
+
+    public ResponseEntity<List<ServiceProviderProfile>> getPendingApprovalsForSociety(UUID societyId) {
+        List<ServiceProviderSociety> pendingSp = serviceProviderSocietyRepository.findBySocietyIdAndApprovalStatus(societyId, ServiceProviderSociety.ApprovalStatus.PENDING);
+
+        List<ServiceProviderProfile> result = new ArrayList<>();
+
+        for (ServiceProviderSociety sps : pendingSp) {
+            ServiceProvider serviceProvider = serviceProviderRepository.findById(sps.getServiceProvider().getUserId()).orElseThrow(() -> new RuntimeException("Service Provider found"));
+            Users user = userRepository.findById(serviceProvider.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + serviceProvider.getUserId()));
+
+            List<ServiceProviderCategory> spCategories;
+
+            spCategories = serviceProviderCategoryRepository.findByServiceProviderId(serviceProvider.getUserId());
+
+
+            List<ServiceProviderProfile.ProviderCategory> providerCategories = spCategories.stream()
+                    .map(spc -> ServiceProviderProfile.ProviderCategory.builder()
+                            .categoryId(spc.getCategory().getId())
+                            .categoryName(spc.getCategory().getName())
+                            .hourlyRate(spc.getHourlyRate())
+                            .minCharge(spc.getMinCharge())
+                            .isPrimary(spc.getIsPrimary())
+                            .build())
+                    .collect(Collectors.toList());
+
+            // Build the ServiceProviderProfile
+            ServiceProviderProfile profile = ServiceProviderProfile.builder()
+                    .serviceProviderId(serviceProvider.getUserId())
+                    .firstName(serviceProvider.getFirstName())
+                    .lastName(serviceProvider.getLastName())
+                    .businessName(serviceProvider.getBusinessName())
+                    .description(serviceProvider.getDescription())
+                    .experienceYears(serviceProvider.getExperienceYears())
+                    .isVerified(serviceProvider.getIsVerified())
+                    .rating(serviceProvider.getRating())
+                    .totalJobsCompleted(serviceProvider.getTotalJobsCompleted())
+                    .baseServiceCharge(serviceProvider.getBaseServiceCharge())
+                    .phoneSecondary(serviceProvider.getPhoneSecondary())
+                    .address(serviceProvider.getAddress())
+                    .city(serviceProvider.getCity())
+                    .state(serviceProvider.getState())
+                    .pincode(serviceProvider.getPincode())
+                    .availableHoursStart(serviceProvider.getAvailableHoursStart())
+                    .availableHoursEnd(serviceProvider.getAvailableHoursEnd())
+                    .phone(user.getPhone())
+                    .email(user.getEmail())
+                    .isAvailable(serviceProvider.getIsAvailable())
+                    .categories(providerCategories)
+                    .build();
+
+            result.add(profile);
+
+
+        }
+        return ResponseEntity.ok(result);
     }
 }
