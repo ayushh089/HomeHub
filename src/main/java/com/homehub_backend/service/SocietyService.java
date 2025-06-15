@@ -1,12 +1,15 @@
 package com.homehub_backend.service;
 
 import com.homehub_backend.dao.AdminRepository;
+import com.homehub_backend.dao.ServiceProviderSocietyRepository;
 import com.homehub_backend.dao.SocietyRepository;
 import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.request.SocietyRequestDto;
 import com.homehub_backend.dto.response.SocietyDataResponse;
 import com.homehub_backend.dto.response.SocietyFormResponse;
+import com.homehub_backend.dto.response.SocietyResponseDTO;
 import com.homehub_backend.entity.Admin;
+import com.homehub_backend.entity.ServiceProviderSociety;
 import com.homehub_backend.entity.Society;
 import com.homehub_backend.entity.Users;
 import com.homehub_backend.events.society.SocietyCreateRequestEvent;
@@ -18,16 +21,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SocietyService {
 
     @Autowired
     private SocietyRepository societyRepository;
+    @Autowired
+    ServiceProviderSocietyRepository serviceProviderSocietyRepository;
 
     @Autowired
     UserRepository userRepository;
@@ -115,6 +118,9 @@ public class SocietyService {
         List<Society> societies = new ArrayList<>();
         if (status != null && status.equals("pending")) {
             societies = societyRepository.findByApprovalStatus(Society.ApprovalStatus.PENDING);
+        } else if (status != null && city != null && state != null && status.equals("approve")) {
+            societies = societyRepository.findByCityAndStateAndApprovalStatus(city, state, Society.ApprovalStatus.APPROVED);
+
         } else {
             societies = societyRepository.findByCityAndState(city, state);
 
@@ -123,8 +129,6 @@ public class SocietyService {
 
         List<SocietyDataResponse> responseList = new ArrayList<>();
         for (Society society : societies) {
-
-
             SocietyDataResponse response = SocietyDataResponse.builder()
                     .id(society.getId())
                     .name(society.getName())
@@ -144,5 +148,92 @@ public class SocietyService {
 
         return responseList;
 
+    }
+
+    public List<SocietyDataResponse> getApproveSocietiesByCity(String city, String state) {
+
+        List<Society> societies = new ArrayList<>();
+
+        societies = societyRepository.findByCityAndStateAndApprovalStatus(city, state, Society.ApprovalStatus.APPROVED);
+
+
+        List<SocietyDataResponse> responseList = new ArrayList<>();
+        for (Society society : societies) {
+            SocietyDataResponse response = SocietyDataResponse.builder()
+                    .id(society.getId())
+                    .name(society.getName())
+                    .address(society.getAddress())
+                    .city(society.getCity())
+                    .state(society.getState())
+                    .pincode(society.getPincode())
+                    .build();
+
+            responseList.add(response);
+        }
+
+        return responseList;
+
+
+    }
+
+
+
+    public ResponseEntity<List<SocietyResponseDTO>> getAvailableSocieties(
+            String city,
+            String state,
+            UUID providerId
+    ) {
+        try {
+            // Get all societies in the city/state
+            List<Society> societies = societyRepository.findByCityAndState(city, state);
+
+            if (societies.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.emptyList());
+            }
+
+            List<UUID> societyIds = societies.stream()
+                    .map(Society::getId)
+                    .collect(Collectors.toList());
+
+            // Get provider's applications in these societies
+            List<ServiceProviderSociety> applications = serviceProviderSocietyRepository
+                    .findByServiceProviderUserIdAndSocietyIdIn(providerId, societyIds);
+
+            // Map to response DTO with status
+            List<SocietyResponseDTO> response = societies.stream()
+                    .map(society -> mapToSocietyResponse(society, applications))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
+        }
+    }
+
+    private SocietyResponseDTO mapToSocietyResponse(
+            Society society,
+            List<ServiceProviderSociety> applications
+    ) {
+        String status = "NOT_APPLIED";
+        Optional<ServiceProviderSociety> application = applications.stream()
+                .filter(app -> app.getSociety().getId().equals(society.getId()))
+                .findFirst();
+
+        if (application.isPresent()) {
+            status = application.get().getApprovalStatus().toString();
+        }
+
+        return new SocietyResponseDTO(
+                society.getId(),
+                society.getName(),
+                society.getAddress(),
+                society.getCity(),
+                society.getState(),
+                society.getPincode(),
+                status
+        );
     }
 }

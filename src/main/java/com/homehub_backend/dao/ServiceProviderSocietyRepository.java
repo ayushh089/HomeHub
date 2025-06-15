@@ -19,4 +19,9 @@ public interface ServiceProviderSocietyRepository extends JpaRepository<ServiceP
     List<ServiceProviderSociety> findByApprovalStatus(ServiceProviderSociety.ApprovalStatus approvalStatus);
 
     ServiceProviderSociety findByServiceProviderUserIdAndSocietyId(UUID serviceProviderId, UUID societyId);
+
+    List<ServiceProviderSociety> findByServiceProviderUserIdAndSocietyIdIn(
+            UUID providerId,
+            List<UUID> societyIds
+    );
 }

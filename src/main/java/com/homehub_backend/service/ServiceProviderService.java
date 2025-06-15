@@ -87,7 +87,7 @@ public class ServiceProviderService {
 
             for (ServiceProviderSociety sps : serviceProviderList) {
                 ServiceProvider serviceProvider = sps.getServiceProvider();
-                Users user=userRepository.findById(serviceProvider.getUserId())
+                Users user = userRepository.findById(serviceProvider.getUserId())
                         .orElseThrow(() -> new RuntimeException("User not found with ID: " + serviceProvider.getUserId()));
 
 
@@ -147,5 +147,51 @@ public class ServiceProviderService {
 //            log.error("Error fetching service providers for society: " + societyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    public ResponseEntity<ServiceProviderProfile> getMyProfile(String username) {
+        Users user = userRepository.findByEmail(username);
+        ServiceProvider serviceProvider = serviceProviderRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + user.getId()));
+
+        List<ServiceProviderCategory> spCategories;
+        spCategories = serviceProviderCategoryRepository.findByServiceProviderId(serviceProvider.getUserId());
+
+        List<ServiceProviderProfile.ProviderCategory> providerCategories = spCategories.stream()
+                .map(spc -> ServiceProviderProfile.ProviderCategory.builder()
+                        .categoryId(spc.getCategory().getId())
+                        .categoryName(spc.getCategory().getName()) // Assuming ServiceCategory has getName()
+                        .hourlyRate(spc.getHourlyRate())
+                        .minCharge(spc.getMinCharge())
+                        .isPrimary(spc.getIsPrimary())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Build the ServiceProviderProfile
+        ServiceProviderProfile profile = ServiceProviderProfile.builder()
+                .serviceProviderId(serviceProvider.getUserId())
+                .firstName(serviceProvider.getFirstName())
+                .lastName(serviceProvider.getLastName())
+                .businessName(serviceProvider.getBusinessName())
+                .description(serviceProvider.getDescription())
+                .experienceYears(serviceProvider.getExperienceYears())
+                .isVerified(serviceProvider.getIsVerified())
+                .rating(serviceProvider.getRating())
+                .totalJobsCompleted(serviceProvider.getTotalJobsCompleted())
+                .baseServiceCharge(serviceProvider.getBaseServiceCharge())
+                .phoneSecondary(serviceProvider.getPhoneSecondary())
+                .address(serviceProvider.getAddress())
+                .city(serviceProvider.getCity())
+                .state(serviceProvider.getState())
+                .pincode(serviceProvider.getPincode())
+                .availableHoursStart(serviceProvider.getAvailableHoursStart())
+                .availableHoursEnd(serviceProvider.getAvailableHoursEnd())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .isAvailable(serviceProvider.getIsAvailable())
+                .categories(providerCategories)
+                .build();
+        return ResponseEntity.ok(profile);
+
     }
 }

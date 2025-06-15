@@ -1,15 +1,20 @@
 package com.homehub_backend.controller;
 
+import com.homehub_backend.dao.UserRepository;
 import com.homehub_backend.dto.request.SocietyRequestDto;
 import com.homehub_backend.dto.response.ServiceProviderApprovalReqResponse;
 import com.homehub_backend.dto.response.SocietyDataResponse;
 import com.homehub_backend.dto.response.SocietyFormResponse;
+import com.homehub_backend.dto.response.SocietyResponseDTO;
 import com.homehub_backend.entity.Society;
+import com.homehub_backend.entity.Users;
 import com.homehub_backend.service.ServiceProviderSocietyService;
 import com.homehub_backend.service.SocietyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +30,8 @@ public class SocietyController {
 
     @Autowired
     ServiceProviderSocietyService serviceProviderSocietyService;
+    @Autowired
+    UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<SocietyFormResponse> registerSociety(@RequestBody SocietyRequestDto st) {
@@ -36,7 +43,6 @@ public class SocietyController {
     public ResponseEntity<List<Society>> getAllSocieties() {
         return societyService.getAllSociety();
     }
-
 
 
     @GetMapping("/{id}")
@@ -73,6 +79,26 @@ public class SocietyController {
     ) {
         List<SocietyDataResponse> societies = societyService.getSocietiesByCityAndState(city, state, status);
         return ResponseEntity.ok(societies);
+    }
+
+    @GetMapping("/getApproveSocieties")
+    public ResponseEntity<List<SocietyDataResponse>> getApproveSocietiesByCity(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state) {
+        List<SocietyDataResponse> societies = societyService.getApproveSocietiesByCity(city, state);
+        return ResponseEntity.ok(societies);
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<SocietyResponseDTO>> getAvailableSocieties(
+            @RequestParam String city,
+            @RequestParam String state,
+            Authentication authentication) {
+        String username = authentication.getName();
+        System.out.println(username);
+        Users users = userRepository.findByEmail(username);
+
+        return societyService.getAvailableSocieties(city, state, users.getId());
     }
 
 

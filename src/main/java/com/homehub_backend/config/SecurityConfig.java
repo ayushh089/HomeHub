@@ -43,7 +43,7 @@ public class SecurityConfig {
         return http.csrf(customizer -> customizer.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/**","/society/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
 //                        .requestMatchers("/**").permitAll()
 
                         .anyRequest().authenticated())

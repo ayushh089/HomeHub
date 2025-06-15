@@ -169,6 +169,9 @@ public class ServiceProviderSocietyService {
         ServiceProviderSociety updatedRecord = serviceProviderSocietyRepository.save(serviceProviderSociety);
         ServiceProvider sp = serviceProviderRepository.findById(updatedRecord.getServiceProvider().getUserId()).orElseThrow(() -> new RuntimeException("Service Provider found"));
 
+        if(status.equals("REJECTED")){
+            serviceProviderSocietyRepository.delete(serviceProviderSociety);
+        }
         // Return the service provider information
         return ResponseEntity.ok(ServiceProviderDto.status(status, sp.getFirstName(), sp.getLastName(), sp.getBusinessName()));
     }
