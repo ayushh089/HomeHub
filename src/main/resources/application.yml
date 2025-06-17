@@ -26,6 +26,12 @@ spring:
     user:
       name: 123
       password: 123
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
   mail:
     host: smtp.gmail.com
     port: 587
@@ -57,4 +63,15 @@ app:
 
 jwt:
   secret: G9X3G7v9SChJbiEZ1eyMbXBnT4XBCV3ztctGb8AXU8c=
+
+cloud:
+  aws:
+    credentials:
+      accessKey: AKIASVQKH4TRDWBQWEN5
+      secretKey: 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
+    region:
+      static: ap-south-1
+    s3:
+      bucket: homehubbucket
+
 
