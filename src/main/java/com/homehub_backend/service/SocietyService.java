@@ -185,22 +185,21 @@ public class SocietyService {
     ) {
         try {
             // Get all societies in the city/state
+            System.out.println(city);
             List<Society> societies = societyRepository.findByCityAndState(city, state);
 
             if (societies.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.emptyList());
+                List<SocietyResponseDTO> res=new ArrayList<>();
+                return ResponseEntity.ok(res);
             }
 
             List<UUID> societyIds = societies.stream()
                     .map(Society::getId)
                     .collect(Collectors.toList());
 
-            // Get provider's applications in these societies
             List<ServiceProviderSociety> applications = serviceProviderSocietyRepository
                     .findByServiceProviderUserIdAndSocietyIdIn(providerId, societyIds);
 
-            // Map to response DTO with status
             List<SocietyResponseDTO> response = societies.stream()
                     .map(society -> mapToSocietyResponse(society, applications))
                     .collect(Collectors.toList());

@@ -6,10 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, UUID> {
     List<ServiceRequest> findByResidentIdAndStatusIn(UUID residentId, List<ServiceRequest.RequestStatus> statuses);
 
@@ -21,17 +24,7 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
     List<ServiceRequest> findByStatusAndExpiresAtBefore(
             ServiceRequest.RequestStatus status, LocalDateTime expiresAt);
 
-    @Query("SELECT sr FROM ServiceRequest sr WHERE " +
-            "(:residentId IS NULL OR sr.residentId = :residentId) AND " +
-            "(:providerId IS NULL OR sr.providerId = :providerId) AND " +
-            "(:societyId IS NULL OR sr.societyId = :societyId) AND " +
-            "(:categoryId IS NULL OR sr.categoryId = :categoryId) AND " +
-            "(:status IS NULL OR sr.status = :status)")
-    Page<ServiceRequest> findWithFilters(
-            @Param("residentId") UUID residentId,
-            @Param("providerId") UUID providerId,
-            @Param("societyId") UUID societyId,
-            @Param("categoryId") UUID categoryId,
-            @Param("status") ServiceRequest.RequestStatus status,
-            Pageable pageable);
+    List<ServiceRequest> findByStatusIn(List<ServiceRequest.RequestStatus> statuses);
+
+
 }

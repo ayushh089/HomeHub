@@ -8,4 +8,6 @@ import java.util.List;
 import java.util.UUID;
 @Repository
 public interface RequestStatusHistoryRepository extends JpaRepository<RequestStatusHistory, UUID> {
+    List<RequestStatusHistory> findByServiceRequestIdOrderByCreatedAtDesc(UUID requestId);
+
 }

@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 
-
 @Entity
 @Table(name = "provider_responses")
 @Data
@@ -34,29 +33,14 @@ public class ProviderResponse {
     @Column(nullable = false)
     private ResponseType response;
 
-    @Column(name = "proposed_cost", precision = 10, scale = 2)
-    private BigDecimal proposedCost;
 
-    @Column(name = "cost_breakdown", columnDefinition = "TEXT")
-    private String costBreakdown;
+    @Column(name = "total_cost", columnDefinition = "TEXT")
+    private String totalCost;
 
-    @Column(name = "proposed_date")
-    private LocalDateTime proposedDate;
-
-    @Column(name = "proposed_time_slot", length = 50)
-    private String proposedTimeSlot;
-
-    @Column(name = "estimated_duration")
-    private Integer estimatedDuration;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "terms_conditions", columnDefinition = "TEXT")
-    private String termsConditions;
-
-    @Column(name = "valid_until")
-    private LocalDateTime validUntil;
 
     @CreationTimestamp
     @Column(name = "responded_at", updatable = false)

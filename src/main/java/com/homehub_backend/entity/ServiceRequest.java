@@ -1,9 +1,9 @@
 package com.homehub_backend.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,6 +18,10 @@ import java.util.UUID;
 @Data
 @Table(name = "service_requests")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"mediaFiles", "statusHistory", "providerResponses", "rating"})
+
 public class ServiceRequest {
 
     @Id
@@ -74,8 +78,7 @@ public class ServiceRequest {
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
-    @Column(name = "auto_assign")
-    private Boolean autoAssign = false;
+
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
@@ -90,9 +93,13 @@ public class ServiceRequest {
 
     // Relationships
     @OneToMany(mappedBy = "serviceRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+
     private List<RequestMedia> mediaFiles = new ArrayList<>();
 
     @OneToMany(mappedBy = "serviceRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+
     private List<RequestStatusHistory> statusHistory = new ArrayList<>();
 
     @OneToMany(mappedBy = "serviceRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
