@@ -45,11 +45,14 @@ public class ServiceRequestService {
     @Autowired
     AmazonS3 amazonS3;
 
+    @Autowired
+    NotificationService notificationService;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
     @Transactional
-    public ServiceRequest createAndSubmitRequest(ServiceRequestDTO requestDTO, List<MultipartFile> files,  UUID residentId) {
+    public ServiceRequest createAndSubmitRequest(ServiceRequestDTO requestDTO, List<MultipartFile> files, UUID residentId) {
         System.out.println(requestDTO);
 
         Resident resident = residentRepository.findById(residentId)
@@ -78,12 +81,14 @@ public class ServiceRequestService {
 
         ServiceRequest savedRequest = serviceRequestRepository.save(request);
 
-        if (files!=null) {
+        if (files != null) {
             uploadAndSaveMediaFiles(files, savedRequest.getId(), request);
         }
 
         addStatusHistory(savedRequest, null, ServiceRequest.RequestStatus.SUBMITTED, residentId, RequestStatusHistory.UserType.RESIDENT, "Request Created");
 
+
+        notificationService.notifyProvider(requestDTO.getProviderId(), "New service request from Resident " + resident.getFirstName() + " " + resident.getLastName());
         return savedRequest;
     }
 

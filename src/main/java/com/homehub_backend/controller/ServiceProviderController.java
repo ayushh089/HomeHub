@@ -23,10 +23,7 @@ public class ServiceProviderController {
     @Autowired
     ServiceProviderService serviceProviderService;
 
-    //    @PostMapping
-//    public ResponseEntity<ServiceProviderDto> registerServiceProvider(@RequestBody ServiceProviderDto dto) {
-//        return serviceProviderService.createServiceProvider(dto);
-//    }
+
     @GetMapping("/society/{societyId}/service-providers")
     public ResponseEntity<List<ServiceProviderProfile>> getServiceProviderBySocietyId(
             @PathVariable UUID societyId,
