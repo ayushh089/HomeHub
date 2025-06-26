@@ -4,7 +4,11 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.homehub_backend.dao.*;
+import com.homehub_backend.dto.request.ResidentServiceRequestDTO;
 import com.homehub_backend.dto.request.ServiceRequestDTO;
+import com.homehub_backend.dto.response.ProviderResponseDTO;
+import com.homehub_backend.dto.response.RequestMediaDTO;
+import com.homehub_backend.dto.response.RequestStatusHistoryDTO;
 import com.homehub_backend.entity.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -153,6 +157,76 @@ public class ServiceRequestService {
         else if (mimeType.startsWith("video/")) return RequestMedia.MediaType.VIDEO;
         else if (mimeType.equals("application/pdf")) return RequestMedia.MediaType.DOCUMENT;
         return RequestMedia.MediaType.DOCUMENT; // default
+    }
+
+
+    // Add this to ServiceRequestService
+
+    @Autowired
+    ProviderResponseRepository providerResponseRepository;
+
+    public List<ResidentServiceRequestDTO> getServiceRequestsForResident(UUID residentId) {
+        List<ServiceRequest> requests = serviceRequestRepository.findByResidentId(residentId);
+
+        return requests.stream().map(request -> {
+            // Get media files
+            List<RequestMedia> mediaList = requestMediaRepository.findByServiceRequestId(request.getId());
+            List<RequestMediaDTO> mediaDTOs = mediaList.stream().map(media ->
+                    RequestMediaDTO.builder()
+                            .url(media.getUrl())
+                            .filename(media.getFilename())
+                            .mediaType(media.getMediaType().toString())
+                            .mimeType(media.getMimeType())
+                            .createdAt(media.getCreatedAt())
+                            .build()
+            ).toList();
+
+            // Get status history
+            List<RequestStatusHistory> statusHistoryList = statusHistoryRepository.findByServiceRequestId(request.getId());
+            List<RequestStatusHistoryDTO> statusHistoryDTOs = statusHistoryList.stream().map(history ->
+                    RequestStatusHistoryDTO.builder()
+                            .fromStatus(history.getFromStatus() != null ? history.getFromStatus().toString() : null)
+                            .toStatus(history.getToStatus().toString())
+                            .changedByType(history.getChangedByType().toString())
+                            .reason(history.getReason())
+                            .createdAt(history.getCreatedAt())
+                            .build()
+            ).toList();
+
+            // Get provider response if exists
+            ProviderResponseDTO providerResponseDTO = null;
+            if (request.getProviderId() != null) {
+                ProviderResponse response = providerResponseRepository.findByServiceRequestIdAndProviderId(
+                        request.getId(), request.getProviderId());
+
+                if (response != null) {
+                    providerResponseDTO = ProviderResponseDTO.builder()
+                            .response(String.valueOf(response.getResponse()))
+                            .totalCost(response.getTotalCost())
+                            .notes(response.getNotes())
+                            .respondedAt(response.getRespondedAt())
+                            .build();
+                }
+            }
+
+            return ResidentServiceRequestDTO.builder()
+                    .id(request.getId())
+                    .providerId(request.getProviderId())
+                    .societyId(request.getSocietyId())
+                    .categoryId(request.getCategoryId())
+                    .description(request.getDescription())
+                    .urgency(request.getUrgency())
+                    .preferredDate(request.getPreferredDate())
+                    .preferredTimeSlot(request.getPreferredTimeSlot())
+                    .locationDetails(request.getLocationDetails())
+                    .contactPhone(request.getContactPhone())
+                    .status(request.getStatus())
+                    .createdAt(request.getCreatedAt())
+                    .media(mediaDTOs)
+                    .statusHistory(statusHistoryDTOs)
+                    .providerResponse(providerResponseDTO)
+                    .build();
+        }).toList();
     }
 
 

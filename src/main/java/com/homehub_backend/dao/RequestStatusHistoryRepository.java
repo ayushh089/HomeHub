@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface RequestStatusHistoryRepository extends JpaRepository<RequestStatusHistory, UUID> {
     List<RequestStatusHistory> findByServiceRequestIdOrderByCreatedAtDesc(UUID requestId);
 
+    List<RequestStatusHistory> findByServiceRequestId(UUID requestID);
+
 }

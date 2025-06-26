@@ -39,42 +39,7 @@ public class ProviderServiceRequestService {
 
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
-//
-//    public Page<ServiceRequestResponseDTO> getAvailableRequestsForProvider(UUID providerId,
-//                                                                           UUID categoryId,
-//                                                                           UUID societyId,
-//                                                                           String urgency,
-//                                                                           Pageable pageable) {
-//
-//        ServiceProvider provider = serviceProviderRepository.findById(providerId)
-//                .orElseThrow(() -> new RuntimeException("Provider not found"));
-//
-//
-//
-//        List<ServiceRequest> allRequests = serviceRequestRepository.findByStatusIn(ServiceRequest.RequestStatus.SUBMITTED);
-//
-//        // Filter by provider's service areas and categories
-//        List<ServiceRequest> filteredRequests = allRequests.stream()
-//                .filter(req -> req.getProviderId() == null || req.getProviderId().equals(providerId))
-//                .filter(req -> categoryId == null || req.getCategoryId().equals(categoryId))
-//                .filter(req -> societyId == null || req.getSocietyId().equals(societyId))
-//                .filter(req -> urgency == null || req.getUrgency().toString().equals(urgency))
-//                .filter(req -> !hasProviderAlreadyResponded(req.getId(), providerId))
-//                .collect(Collectors.toList());
-//
-//        // Apply pagination
-//        int start = (int) pageable.getOffset();
-//        int end = Math.min((start + pageable.getPageSize()), filteredRequests.size());
-//
-//        List<ServiceRequest> paginatedRequests = filteredRequests.subList(start, end);
-//
-//        List<ServiceRequestResponseDTO> responseDTOs = paginatedRequests.stream()
-//                .map(this::convertToResponseDTO)
-//                .collect(Collectors.toList());
-//
-//        return new PageImpl<>(responseDTOs, pageable, filteredRequests.size());
-//    }
-//
+
     public Page<ServiceRequestResponseDTO> getAssignedRequestsForProvider(UUID providerId,
                                                                           String status,
                                                                           Pageable pageable) {
@@ -123,36 +88,7 @@ public class ProviderServiceRequestService {
 
         return convertToResponseDTO(request);
     }
-//
-//    public RequestSummaryDTO getProviderRequestSummary(UUID providerId) {
-//
-//
-//        List<ServiceRequest.RequestStatus> assignedStatuses = Arrays.asList(
-//                ServiceRequest.RequestStatus.QUOTED,
-//                ServiceRequest.RequestStatus.SCHEDULED,
-//                ServiceRequest.RequestStatus.IN_PROGRESS
-//        );
-//
-//        List<ServiceRequest.RequestStatus> completedStatuses = Arrays.asList(
-//                ServiceRequest.RequestStatus.COMPLETED
-//        );
-//
-//        int availableCount = serviceRequestRepository.findByStatusIn(ServiceRequest.RequestStatus.SUBMITTED).size();
-//        int assignedCount = serviceRequestRepository.findByProviderIdAndStatusIn(providerId, assignedStatuses).size();
-//        int completedCount = serviceRequestRepository.findByProviderIdAndStatusIn(providerId, completedStatuses).size();
-//
-//        return RequestSummaryDTO.builder()
-//                .availableRequests(availableCount)
-//                .assignedRequests(assignedCount)
-//                .completedRequests(completedCount)
-//                .totalEarnings(calculateTotalEarnings(providerId))
-//                .build();
-//    }
-//
-//    private boolean hasProviderAlreadyResponded(UUID requestId, UUID providerId) {
-//        return providerResponseRepository.existsByRequestIdAndProviderId(requestId, providerId);
-//    }
-//
+
     private ServiceRequestResponseDTO convertToResponseDTO(ServiceRequest request) {
         // Get resident details
         Resident resident = residentRepository.findById(request.getResidentId())
@@ -198,15 +134,5 @@ public class ProviderServiceRequestService {
                         .collect(Collectors.toList()))
                 .build();
     }
-//
-//    private Double calculateTotalEarnings(UUID providerId) {
-//        List<ServiceRequest> completedRequests = serviceRequestRepository
-//                .findByProviderIdAndStatusIn(providerId,
-//                        Arrays.asList(ServiceRequest.RequestStatus.COMPLETED));
-//
-//        return completedRequests.stream()
-//                .filter(req -> req.getFinalCost() != null)
-//                .mapToDouble(req -> req.getFinalCost().doubleValue())
-//                .sum();
-//    }
+
 }

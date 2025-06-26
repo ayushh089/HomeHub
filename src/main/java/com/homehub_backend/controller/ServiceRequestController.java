@@ -4,6 +4,7 @@ package com.homehub_backend.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.homehub_backend.dao.UserRepository;
+import com.homehub_backend.dto.request.ResidentServiceRequestDTO;
 import com.homehub_backend.dto.request.ServiceRequestDTO;
 import com.homehub_backend.entity.ServiceRequest;
 import com.homehub_backend.entity.Users;
@@ -47,6 +48,21 @@ public class ServiceRequestController {
 
         System.out.println(files);
         return ResponseEntity.ok(serviceRequestService.createAndSubmitRequest(requestDTO,files, resident.getId()));
+    }
+
+    // In ServiceRequestController
+
+    @GetMapping
+    public ResponseEntity<List<ResidentServiceRequestDTO>> getServiceRequestsForResident(Authentication authentication) {
+        String email = authentication.getName();
+        Users resident = userRepository.findByEmail(email);
+
+        if (resident == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<ResidentServiceRequestDTO> requests = serviceRequestService.getServiceRequestsForResident(resident.getId());
+        return ResponseEntity.ok(requests);
     }
 
 
