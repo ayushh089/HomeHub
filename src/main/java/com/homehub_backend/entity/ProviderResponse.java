@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
 @Entity
 @Table(name = "provider_responses")
 @Data
@@ -33,20 +32,22 @@ public class ProviderResponse {
     @Column(nullable = false)
     private ResponseType response;
 
-
     @Column(name = "total_cost", columnDefinition = "TEXT")
     private String totalCost;
 
-
     @Column(columnDefinition = "TEXT")
     private String notes;
-
 
     @CreationTimestamp
     @Column(name = "responded_at", updatable = false)
     private LocalDateTime respondedAt;
 
-    enum ResponseType {
-        ACCEPTED, REJECTED, MODIFIED, QUOTED
+    public enum ResponseType {
+        ACCEPTED,
+        REJECTED,
+        MODIFIED,
+        QUOTED,
+        OUT_OF_SERVICE,
+        COMPLETED
     }
 }

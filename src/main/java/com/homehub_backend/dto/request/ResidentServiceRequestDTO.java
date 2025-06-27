@@ -22,17 +22,19 @@ import java.util.UUID;
 public class ResidentServiceRequestDTO {
     private UUID id;
     private UUID providerId;
-    private UUID societyId;
     private UUID categoryId;
     private String description;
+
     private ServiceRequest.UrgencyLevel urgency;
     private LocalDate preferredDate;
     private String preferredTimeSlot;
-    private String locationDetails;
-    private String contactPhone;
+
     private ServiceRequest.RequestStatus status;
     private LocalDateTime createdAt;
     private List<RequestMediaDTO> media;
     private List<RequestStatusHistoryDTO> statusHistory;
     private ProviderResponseDTO providerResponse;
+
+    private String providerName;
+
 }

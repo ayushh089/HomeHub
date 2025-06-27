@@ -110,12 +110,12 @@ public class ServiceRequest {
 
 
     public enum UrgencyLevel {
-        LOW, MEDIUM, HIGH, EMERGENCY
+        LOW, MEDIUM, HIGH, URGENT
     }
 
     public enum RequestStatus {
          SUBMITTED, PROVIDER_REVIEW, QUOTED, SCHEDULED,
-        IN_PROGRESS, COMPLETED, CANCELLED, REJECTED, EXPIRED
+        IN_PROGRESS, COMPLETED, CANCELLED, REJECTED, EXPIRED,OUT_OF_SERVICE
     }
 
     public enum PaymentStatus {

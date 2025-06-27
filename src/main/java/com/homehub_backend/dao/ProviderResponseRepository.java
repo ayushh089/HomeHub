@@ -14,5 +14,6 @@ public interface ProviderResponseRepository extends JpaRepository<ProviderRespon
 
     // Use the relationship property name with providerId
     ProviderResponse findByServiceRequestIdAndProviderId(UUID requestId, UUID providerId);
+//    ProviderResponse findByRequestIdAndProviderId
 
 }

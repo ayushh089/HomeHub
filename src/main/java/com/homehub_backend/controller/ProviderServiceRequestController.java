@@ -1,12 +1,15 @@
 package com.homehub_backend.controller;
 
 import com.homehub_backend.dao.UserRepository;
+import com.homehub_backend.dto.request.ProviderResponseRequestDTO;
+import com.homehub_backend.dto.response.ProviderResponseDTO;
 import com.homehub_backend.dto.response.ServiceRequestResponseDTO;
 import com.homehub_backend.entity.Users;
 import com.homehub_backend.service.ProviderServiceRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -72,15 +75,38 @@ public class ProviderServiceRequestController {
         return ResponseEntity.ok(request);
     }
 
-//    @GetMapping("/summary")
-//    @Operation(summary = "Get provider request summary",
-//            description = "Get summary statistics of service requests for the provider")
-//    public ResponseEntity<?> getRequestSummary(Authentication authentication) {
+
+    @PostMapping("/{requestId}/respond")
+    @Operation(summary = "Respond to a service request",
+            description = "Allows provider to accept, reject, quote, or modify a service request")
+    public ResponseEntity<ProviderResponseDTO> respondToRequest(
+            @Parameter(description = "Service request ID") @PathVariable UUID requestId,
+            @RequestBody ProviderResponseRequestDTO responseDTO,
+            Authentication authentication) throws BadRequestException {
+
+        String email = authentication.getName();
+            Users provider = userRepository.findByEmail(email);
+
+        ProviderResponseDTO response = providerServiceRequestService
+                .respondToServiceRequest(requestId, provider.getId(), responseDTO);
+
+        return ResponseEntity.ok(response);
+    }
+
+//    @GetMapping("/{requestId}/responses")
+//    @Operation(summary = "Get provider responses for a request",
+//            description = "Retrieve all provider responses for a specific service request")
+//    public ResponseEntity<ProviderResponseDTO> getProviderResponses(
+//            @Parameter(description = "Service request ID") @PathVariable UUID requestId,
+//            Authentication authentication) {
+//
 //        String email = authentication.getName();
 //        Users provider = userRepository.findByEmail(email);
 //
-//        var summary = providerServiceRequestService.getProviderRequestSummary(provider.getId());
+//        ProviderResponseDTO response = providerServiceRequestService
+//                .getProviderResponseForRequest(requestId, provider.getId());
 //
-//        return ResponseEntity.ok(summary);
+//        return ResponseEntity.ok(response);
 //    }
+
 }

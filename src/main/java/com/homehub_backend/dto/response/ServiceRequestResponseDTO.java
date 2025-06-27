@@ -39,6 +39,7 @@ public class ServiceRequestResponseDTO {
 
     // Media files
     private List<MediaFileDTO> mediaFiles;
+    private List<RequestStatusHistoryDTO> statusHistory;
 
     @Data
     @Builder

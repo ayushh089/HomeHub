@@ -1,18 +1,18 @@
 package com.homehub_backend.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ProviderResponseDTO {
-    private String response; // "ACCEPTED", "REJECTED", etc.
+    private UUID id;
+    private UUID requestId;
+    private UUID providerId;
+    private String response;
     private String totalCost;
     private String notes;
     private LocalDateTime respondedAt;

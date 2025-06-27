@@ -1,17 +1,24 @@
 package com.homehub_backend.service;
 
 
+import com.amazonaws.services.kms.model.NotFoundException;
 import com.homehub_backend.dao.*;
+import com.homehub_backend.dto.request.ProviderResponseRequestDTO;
+import com.homehub_backend.dto.response.ProviderResponseDTO;
+import com.homehub_backend.dto.response.RequestStatusHistoryDTO;
 import com.homehub_backend.dto.response.ServiceRequestResponseDTO;
 import com.homehub_backend.dto.response.RequestSummaryDTO;
 import com.homehub_backend.entity.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +31,9 @@ public class ProviderServiceRequestService {
 
     @Autowired
     private ServiceProviderRepository serviceProviderRepository;
+
+    @Autowired
+    private RequestStatusHistoryRepository requestStatusHistoryRepository;
 
     @Autowired
     private RequestMediaRepository requestMediaRepository;
@@ -50,6 +60,11 @@ public class ProviderServiceRequestService {
             assignedStatuses = Arrays.asList(ServiceRequest.RequestStatus.valueOf(status));
         } else {
             assignedStatuses = Arrays.asList(
+                    ServiceRequest.RequestStatus.SUBMITTED,
+                    ServiceRequest.RequestStatus.REJECTED,
+                    ServiceRequest.RequestStatus.PROVIDER_REVIEW,
+                    ServiceRequest.RequestStatus.EXPIRED,
+
                     ServiceRequest.RequestStatus.QUOTED,
                     ServiceRequest.RequestStatus.SCHEDULED,
                     ServiceRequest.RequestStatus.IN_PROGRESS,
@@ -105,6 +120,10 @@ public class ProviderServiceRequestService {
         // Get media files
         List<RequestMedia> mediaFiles = requestMediaRepository.findByServiceRequestId(request.getId());
 
+
+        List<RequestStatusHistory> statusHistory = requestStatusHistoryRepository
+                .findByServiceRequestIdOrderByCreatedAtDesc(request.getId());
+
         return ServiceRequestResponseDTO.builder()
                 .id(request.getId())
                 .description(request.getDescription())
@@ -132,6 +151,150 @@ public class ProviderServiceRequestService {
                                 .mediaType(media.getMediaType().toString())
                                 .build())
                         .collect(Collectors.toList()))
+
+                .statusHistory(statusHistory.stream()
+                        .map(history -> RequestStatusHistoryDTO.builder()
+                                .fromStatus(String.valueOf(history.getFromStatus()) )
+                                .toStatus(history.getToStatus().toString())
+                                .changedByType(history.getChangedByType().toString())
+                                .reason(history.getReason())
+                                .createdAt(history.getCreatedAt())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+
+    @Transactional
+    public ProviderResponseDTO  respondToServiceRequest(UUID requestId, UUID providerId,
+                                                       ProviderResponseRequestDTO responseDTO) throws BadRequestException {
+        ServiceRequest request = serviceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Service request not found"));
+
+        if (request.getProviderId() == null || !request.getProviderId().equals(providerId)) {
+            throw new BadRequestException("Provider is not assigned to this request");
+        }
+
+        ProviderResponse.ResponseType responseType;
+        try {
+            responseType = ProviderResponse.ResponseType.valueOf(responseDTO.getResponse().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid response type");
+        }
+
+        if (responseType == ProviderResponse.ResponseType.QUOTED &&
+                (responseDTO.getTotalCost() == null || responseDTO.getTotalCost().isEmpty())) {
+            throw new BadRequestException("Total cost is required for quoted response");
+        }
+
+        ProviderResponse existingResponse = providerResponseRepository
+                .findByServiceRequestIdAndProviderId(requestId, providerId);
+
+        ProviderResponse response;
+        if (existingResponse!=null) {
+            // Update existing response
+            response = existingResponse;
+            response.setResponse(responseType);
+            response.setTotalCost(responseDTO.getTotalCost());
+            response.setNotes(responseDTO.getNotes());
+        } else {
+            // Create new response
+            response = new ProviderResponse();
+            response.setServiceRequest(request);
+            response.setProviderId(providerId);
+            response.setResponse(responseType);
+            response.setTotalCost(responseDTO.getTotalCost());
+            response.setNotes(responseDTO.getNotes());
+        }
+
+        // Save the response
+        response = providerResponseRepository.save(response);
+
+        // Update the service request status based on response
+        updateRequestStatus(request, responseType,response);
+
+        return convertToProviderResponseDTO(response);
+    }
+
+    private void updateRequestStatus(ServiceRequest request,
+                                     ProviderResponse.ResponseType responseType,
+                                     ProviderResponse response) {
+        // Store the old status before updating
+        ServiceRequest.RequestStatus oldStatus = request.getStatus();
+        ServiceRequest.RequestStatus newStatus = oldStatus; // default to same status
+
+        switch (responseType) {
+            case ACCEPTED:
+                newStatus = ServiceRequest.RequestStatus.SCHEDULED;
+                break;
+            case REJECTED:
+                newStatus = ServiceRequest.RequestStatus.REJECTED;
+                break;
+            case QUOTED:
+                newStatus = ServiceRequest.RequestStatus.QUOTED;
+                if (response.getTotalCost() != null) {
+                    try {
+                        request.setFinalCost(new BigDecimal(response.getTotalCost()));
+                    } catch (NumberFormatException e) {
+                        // Handle invalid number format
+                    }
+                }
+                break;
+            case MODIFIED:
+                // Status might remain the same or change based on business logic
+                break;
+            case COMPLETED:
+                newStatus = ServiceRequest.RequestStatus.COMPLETED;
+                break;
+            case OUT_OF_SERVICE:
+                newStatus = ServiceRequest.RequestStatus.OUT_OF_SERVICE;
+                break;
+        }
+
+        // Only save history if status changed
+        if (oldStatus != newStatus) {
+            request.setStatus(newStatus);
+            saveStatusHistory(request, oldStatus, newStatus, response.getProviderId(),
+                    RequestStatusHistory.UserType.PROVIDER, null, response.getNotes());
+        }
+
+        serviceRequestRepository.save(request);
+    }
+
+    private void saveStatusHistory(ServiceRequest request,
+                                   ServiceRequest.RequestStatus fromStatus,
+                                   ServiceRequest.RequestStatus toStatus,
+                                   UUID changedBy,
+                                   RequestStatusHistory.UserType changedByType,
+                                   String reason,
+                                   String notes) {
+        RequestStatusHistory history = new RequestStatusHistory();
+        history.setServiceRequest(request);
+        history.setFromStatus(fromStatus);
+        history.setToStatus(toStatus);
+        history.setChangedBy(changedBy);
+        history.setChangedByType(changedByType);
+        history.setReason(reason);
+        history.setNotes(notes);
+
+        requestStatusHistoryRepository.save(history);
+    }
+
+    public ProviderResponseDTO getProviderResponseForRequest(UUID requestId, UUID providerId) {
+        ProviderResponse response = providerResponseRepository.findByServiceRequestIdAndProviderId(requestId, providerId);
+
+        return convertToProviderResponseDTO(response);
+    }
+
+    private ProviderResponseDTO convertToProviderResponseDTO(ProviderResponse response) {
+        return ProviderResponseDTO.builder()
+                .id(response.getId())
+                .requestId(response.getServiceRequest().getId())
+                .providerId(response.getProviderId())
+                .response(response.getResponse().toString())
+                .totalCost(response.getTotalCost())
+                .notes(response.getNotes())
+                .respondedAt(response.getRespondedAt())
                 .build();
     }
 

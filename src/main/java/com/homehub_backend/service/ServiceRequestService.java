@@ -47,6 +47,9 @@ public class ServiceRequestService {
     RequestMediaRepository requestMediaRepository;
 
     @Autowired
+    ServiceProviderRepository serviceProviderRepository;
+
+    @Autowired
     AmazonS3 amazonS3;
 
     @Autowired
@@ -125,14 +128,12 @@ public class ServiceRequestService {
                 String fileKey = "requests/" + requestId + "/" + UUID.randomUUID() + "_" +
                         Objects.requireNonNull(file.getOriginalFilename());
 
-                // Upload to S3 with metadata
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentLength(file.getSize());
                 metadata.setContentType(file.getContentType());
 
                 amazonS3.putObject(new PutObjectRequest(bucketName, fileKey, file.getInputStream(), metadata));
 
-                // Create media record
                 RequestMedia media = RequestMedia.builder()
                         .serviceRequest(request)
                         .url(fileKey)
@@ -169,7 +170,6 @@ public class ServiceRequestService {
         List<ServiceRequest> requests = serviceRequestRepository.findByResidentId(residentId);
 
         return requests.stream().map(request -> {
-            // Get media files
             List<RequestMedia> mediaList = requestMediaRepository.findByServiceRequestId(request.getId());
             List<RequestMediaDTO> mediaDTOs = mediaList.stream().map(media ->
                     RequestMediaDTO.builder()
@@ -181,7 +181,6 @@ public class ServiceRequestService {
                             .build()
             ).toList();
 
-            // Get status history
             List<RequestStatusHistory> statusHistoryList = statusHistoryRepository.findByServiceRequestId(request.getId());
             List<RequestStatusHistoryDTO> statusHistoryDTOs = statusHistoryList.stream().map(history ->
                     RequestStatusHistoryDTO.builder()
@@ -193,7 +192,6 @@ public class ServiceRequestService {
                             .build()
             ).toList();
 
-            // Get provider response if exists
             ProviderResponseDTO providerResponseDTO = null;
             if (request.getProviderId() != null) {
                 ProviderResponse response = providerResponseRepository.findByServiceRequestIdAndProviderId(
@@ -208,23 +206,22 @@ public class ServiceRequestService {
                             .build();
                 }
             }
-
+            ServiceProvider sp=serviceProviderRepository.findById(request.getProviderId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getProviderId()));
             return ResidentServiceRequestDTO.builder()
                     .id(request.getId())
                     .providerId(request.getProviderId())
-                    .societyId(request.getSocietyId())
                     .categoryId(request.getCategoryId())
                     .description(request.getDescription())
                     .urgency(request.getUrgency())
                     .preferredDate(request.getPreferredDate())
                     .preferredTimeSlot(request.getPreferredTimeSlot())
-                    .locationDetails(request.getLocationDetails())
-                    .contactPhone(request.getContactPhone())
                     .status(request.getStatus())
                     .createdAt(request.getCreatedAt())
                     .media(mediaDTOs)
                     .statusHistory(statusHistoryDTOs)
                     .providerResponse(providerResponseDTO)
+                    .providerName(sp.getFirstName()+" "+sp.getLastName())
                     .build();
         }).toList();
     }
