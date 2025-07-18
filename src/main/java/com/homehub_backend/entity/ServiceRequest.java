@@ -1,6 +1,5 @@
 package com.homehub_backend.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,7 +19,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"mediaFiles", "statusHistory", "providerResponses", "rating"})
+@ToString(exclude = { "mediaFiles", "statusHistory", "providerResponses", "rating" })
 
 public class ServiceRequest {
 
@@ -40,8 +39,6 @@ public class ServiceRequest {
     @Column(name = "category_id", nullable = false)
     private UUID categoryId;
 
-
-
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
@@ -55,7 +52,6 @@ public class ServiceRequest {
     @Column(name = "preferred_time_slot", length = 50)
     private String preferredTimeSlot;
 
-
     @Column(name = "location_details", columnDefinition = "TEXT")
     private String locationDetails;
 
@@ -64,9 +60,7 @@ public class ServiceRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RequestStatus status ;
-
-
+    private RequestStatus status;
 
     @Column(name = "final_cost", precision = 10, scale = 2)
     private BigDecimal finalCost;
@@ -77,8 +71,6 @@ public class ServiceRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
-
-
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
@@ -108,18 +100,16 @@ public class ServiceRequest {
     @OneToOne(mappedBy = "serviceRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ServiceRating rating;
 
-
     public enum UrgencyLevel {
         LOW, MEDIUM, HIGH, URGENT
     }
 
     public enum RequestStatus {
-         SUBMITTED, PROVIDER_REVIEW, QUOTED, SCHEDULED,
-        IN_PROGRESS, COMPLETED, CANCELLED, REJECTED, EXPIRED,OUT_OF_SERVICE
+        SUBMITTED, PROVIDER_REVIEW, QUOTED, SCHEDULED,
+        IN_PROGRESS, COMPLETED, CANCELLED, REJECTED, EXPIRED, OUT_FOR_SERVICE
     }
 
     public enum PaymentStatus {
         PENDING, PARTIAL, PAID, REFUNDED, FAILED
     }
 }
-

@@ -93,20 +93,20 @@ public class ProviderServiceRequestController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/{requestId}/responses")
-//    @Operation(summary = "Get provider responses for a request",
-//            description = "Retrieve all provider responses for a specific service request")
-//    public ResponseEntity<ProviderResponseDTO> getProviderResponses(
-//            @Parameter(description = "Service request ID") @PathVariable UUID requestId,
-//            Authentication authentication) {
-//
-//        String email = authentication.getName();
-//        Users provider = userRepository.findByEmail(email);
-//
-//        ProviderResponseDTO response = providerServiceRequestService
-//                .getProviderResponseForRequest(requestId, provider.getId());
-//
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/{requestId}/responses")
+    @Operation(summary = "Get provider responses for a request",
+            description = "Retrieve all provider responses for a specific service request")
+    public ResponseEntity<ProviderResponseDTO> getProviderResponses(
+            @Parameter(description = "Service request ID") @PathVariable UUID requestId,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        Users provider = userRepository.findByEmail(email);
+
+        ProviderResponseDTO response = providerServiceRequestService
+                .getProviderResponseForRequest(requestId, provider.getId());
+
+        return ResponseEntity.ok(response);
+    }
 
 }

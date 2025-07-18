@@ -211,6 +211,8 @@ public class ServiceRequestService {
             return ResidentServiceRequestDTO.builder()
                     .id(request.getId())
                     .providerId(request.getProviderId())
+                    .paymentStatus(String.valueOf(request.getPaymentStatus()))
+
                     .categoryId(request.getCategoryId())
                     .description(request.getDescription())
                     .urgency(request.getUrgency())

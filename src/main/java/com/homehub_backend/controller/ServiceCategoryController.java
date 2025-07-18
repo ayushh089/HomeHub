@@ -22,6 +22,7 @@ public class ServiceCategoryController {
     ServiceCategoryService serviceCategoryService;
 
     @PostMapping
+
     public ResponseEntity<ServiceCategoryResponse> addServiceCategory(@RequestBody ServiceCategoryRequest dto){
             return serviceCategoryService.addServiceCategory(dto);
     }

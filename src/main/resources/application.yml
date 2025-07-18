@@ -12,9 +12,9 @@ spring:
   application:
     name: homehub-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/homehub
-    username: postgres
-    password: 23z7bnn3
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update  # or validate/create depending on your needs
@@ -33,10 +33,10 @@ spring:
       max-request-size: 10MB
       enabled: true
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: guptaayush1280@gmail.com
-    password: lvbpparbietpkpjp
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -62,16 +62,21 @@ app:
   url: http://localhost:8081
 
 jwt:
-  secret: G9X3G7v9SChJbiEZ1eyMbXBnT4XBCV3ztctGb8AXU8c=
+  secret: ${JWT_KEY}
 
 cloud:
   aws:
     credentials:
-      accessKey: AKIASVQKH4TRDWBQWEN5
-      secretKey: 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
+      accessKey: ${AWS_ACCESSKEY}
+      secretKey: ${AWS_SECRETKEY}
     region:
-      static: ap-south-1
+      static: ${AWS_REGION}
     s3:
-      bucket: homehubbucket
+      bucket: ${S3_BUCKET}
+      
+razorpay:
+  api:
+    key: ${RAZORPAY_API_KEY}
+    secret: ${RAZORPAY_API_SECRET}
 
 

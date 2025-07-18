@@ -47,7 +47,7 @@ public class ProviderResponse {
         REJECTED,
         MODIFIED,
         QUOTED,
-        OUT_OF_SERVICE,
+        OUT_FOR_SERVICE,
         COMPLETED
     }
 }

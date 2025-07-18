@@ -1,6 +1,5 @@
 package com.homehub_backend.service;
 
-
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.homehub_backend.dao.*;
 import com.homehub_backend.dto.request.ProviderResponseRequestDTO;
@@ -51,8 +50,8 @@ public class ProviderServiceRequestService {
     private ServiceCategoryRepository serviceCategoryRepository;
 
     public Page<ServiceRequestResponseDTO> getAssignedRequestsForProvider(UUID providerId,
-                                                                          String status,
-                                                                          Pageable pageable) {
+            String status,
+            Pageable pageable) {
 
         List<ServiceRequest.RequestStatus> assignedStatuses;
 
@@ -64,12 +63,12 @@ public class ProviderServiceRequestService {
                     ServiceRequest.RequestStatus.REJECTED,
                     ServiceRequest.RequestStatus.PROVIDER_REVIEW,
                     ServiceRequest.RequestStatus.EXPIRED,
+                    ServiceRequest.RequestStatus.OUT_FOR_SERVICE,
 
                     ServiceRequest.RequestStatus.QUOTED,
                     ServiceRequest.RequestStatus.SCHEDULED,
                     ServiceRequest.RequestStatus.IN_PROGRESS,
-                    ServiceRequest.RequestStatus.COMPLETED
-            );
+                    ServiceRequest.RequestStatus.COMPLETED);
         }
 
         List<ServiceRequest> requests = serviceRequestRepository.findByProviderIdAndStatusIn(
@@ -120,7 +119,6 @@ public class ProviderServiceRequestService {
         // Get media files
         List<RequestMedia> mediaFiles = requestMediaRepository.findByServiceRequestId(request.getId());
 
-
         List<RequestStatusHistory> statusHistory = requestStatusHistoryRepository
                 .findByServiceRequestIdOrderByCreatedAtDesc(request.getId());
 
@@ -139,7 +137,7 @@ public class ProviderServiceRequestService {
                 .createdAt(request.getCreatedAt())
                 .updatedAt(request.getUpdatedAt())
                 .expiresAt(request.getExpiresAt())
-                .residentName(resident != null ? resident.getFirstName()+" "+ resident.getLastName() : "Unknown")
+                .residentName(resident != null ? resident.getFirstName() + " " + resident.getLastName() : "Unknown")
                 .residentPhone(resident != null ? resident.getApartmentNumber() : null)
                 .societyName(society != null ? society.getName() : "Unknown")
                 .categoryName(category != null ? category.getName() : "Unknown")
@@ -154,7 +152,7 @@ public class ProviderServiceRequestService {
 
                 .statusHistory(statusHistory.stream()
                         .map(history -> RequestStatusHistoryDTO.builder()
-                                .fromStatus(String.valueOf(history.getFromStatus()) )
+                                .fromStatus(String.valueOf(history.getFromStatus()))
                                 .toStatus(history.getToStatus().toString())
                                 .changedByType(history.getChangedByType().toString())
                                 .reason(history.getReason())
@@ -164,10 +162,9 @@ public class ProviderServiceRequestService {
                 .build();
     }
 
-
     @Transactional
-    public ProviderResponseDTO  respondToServiceRequest(UUID requestId, UUID providerId,
-                                                       ProviderResponseRequestDTO responseDTO) throws BadRequestException {
+    public ProviderResponseDTO respondToServiceRequest(UUID requestId, UUID providerId,
+            ProviderResponseRequestDTO responseDTO) throws BadRequestException {
         ServiceRequest request = serviceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Service request not found"));
 
@@ -183,7 +180,7 @@ public class ProviderServiceRequestService {
         }
 
         if (responseType == ProviderResponse.ResponseType.QUOTED &&
-                (responseDTO.getTotalCost() == null || responseDTO.getTotalCost().isEmpty())) {
+                (responseDTO.getTotalCost() == null || responseDTO.getTotalCost()==null)) {
             throw new BadRequestException("Total cost is required for quoted response");
         }
 
@@ -191,19 +188,20 @@ public class ProviderServiceRequestService {
                 .findByServiceRequestIdAndProviderId(requestId, providerId);
 
         ProviderResponse response;
-        if (existingResponse!=null) {
+        if (existingResponse != null) {
             // Update existing response
             response = existingResponse;
             response.setResponse(responseType);
-            response.setTotalCost(responseDTO.getTotalCost());
+            response.setTotalCost(String.valueOf(responseDTO.getTotalCost()));
             response.setNotes(responseDTO.getNotes());
+            request.setFinalCost(responseDTO.getTotalCost());
         } else {
             // Create new response
             response = new ProviderResponse();
             response.setServiceRequest(request);
             response.setProviderId(providerId);
             response.setResponse(responseType);
-            response.setTotalCost(responseDTO.getTotalCost());
+            response.setTotalCost(String.valueOf(responseDTO.getTotalCost()));
             response.setNotes(responseDTO.getNotes());
         }
 
@@ -211,14 +209,14 @@ public class ProviderServiceRequestService {
         response = providerResponseRepository.save(response);
 
         // Update the service request status based on response
-        updateRequestStatus(request, responseType,response);
+        updateRequestStatus(request, responseType, response);
 
         return convertToProviderResponseDTO(response);
     }
 
     private void updateRequestStatus(ServiceRequest request,
-                                     ProviderResponse.ResponseType responseType,
-                                     ProviderResponse response) {
+            ProviderResponse.ResponseType responseType,
+            ProviderResponse response) {
         // Store the old status before updating
         ServiceRequest.RequestStatus oldStatus = request.getStatus();
         ServiceRequest.RequestStatus newStatus = oldStatus; // default to same status
@@ -246,8 +244,8 @@ public class ProviderServiceRequestService {
             case COMPLETED:
                 newStatus = ServiceRequest.RequestStatus.COMPLETED;
                 break;
-            case OUT_OF_SERVICE:
-                newStatus = ServiceRequest.RequestStatus.OUT_OF_SERVICE;
+            case OUT_FOR_SERVICE:
+                newStatus = ServiceRequest.RequestStatus.OUT_FOR_SERVICE;
                 break;
         }
 
@@ -262,12 +260,12 @@ public class ProviderServiceRequestService {
     }
 
     private void saveStatusHistory(ServiceRequest request,
-                                   ServiceRequest.RequestStatus fromStatus,
-                                   ServiceRequest.RequestStatus toStatus,
-                                   UUID changedBy,
-                                   RequestStatusHistory.UserType changedByType,
-                                   String reason,
-                                   String notes) {
+            ServiceRequest.RequestStatus fromStatus,
+            ServiceRequest.RequestStatus toStatus,
+            UUID changedBy,
+            RequestStatusHistory.UserType changedByType,
+            String reason,
+            String notes) {
         RequestStatusHistory history = new RequestStatusHistory();
         history.setServiceRequest(request);
         history.setFromStatus(fromStatus);
@@ -281,7 +279,8 @@ public class ProviderServiceRequestService {
     }
 
     public ProviderResponseDTO getProviderResponseForRequest(UUID requestId, UUID providerId) {
-        ProviderResponse response = providerResponseRepository.findByServiceRequestIdAndProviderId(requestId, providerId);
+        ProviderResponse response = providerResponseRepository.findByServiceRequestIdAndProviderId(requestId,
+                providerId);
 
         return convertToProviderResponseDTO(response);
     }
