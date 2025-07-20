@@ -43,7 +43,8 @@ public class SecurityConfig {
         return http.csrf(customizer -> customizer.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**","/api/v2/admin/location/states","/api/v2/admin/location/districts/**").permitAll()
+
 //                        .requestMatchers("/**").permitAll()
 
                         .anyRequest().authenticated())
@@ -73,8 +74,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("*"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",          // <--- MUST be here
+                "http://18.232.250.255:8081",
+                "https://homehub.ninja",          // <--- ADD THIS LINE FOR YOUR NEW ROOT DOMAIN
+                "https://www.homehub.ninja"       ,
+                "https://homehub.social",          // <--- ADD THIS LINE FOR YOUR NEW ROOT DOMAIN
+                "https://www.homehub.social"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
