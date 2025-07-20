@@ -1,6 +1,6 @@
 package com.homehub_backend.service;
 
-import com.homehub_backend.dao.UserRepository;
+import com.homehub_backend.dao.*;
 
 import com.homehub_backend.dto.ServiceProviderDto;
 import com.homehub_backend.dto.UserDto;
@@ -10,7 +10,7 @@ import com.homehub_backend.dto.response.AuthResponse;
 import com.homehub_backend.dto.response.ProfileResponse;
 import com.homehub_backend.dto.response.SignupResponse;
 import com.homehub_backend.dto.response.VerificationResponse;
-import com.homehub_backend.entity.Users;
+import com.homehub_backend.entity.*;
 import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -60,6 +60,16 @@ public class AuthService {
     @Autowired
     ServiceProviderService serviceProviderService;
 
+
+    @Autowired
+    ResidentRepository residentRepository;
+    @Autowired
+    AdminRepository adminRepository;
+    @Autowired
+    ServiceProviderRepository serviceProviderRepository;
+    @Autowired
+    PlatformAdminRepository platformAdminRepository;
+
     private String generateVerificationCode() {
         return String.valueOf((int) (Math.random() * 900000) + 100000);
     }
@@ -98,11 +108,11 @@ public class AuthService {
         System.out.println(userdto);
         emailService.sendVerificationEmail(user.getEmail(), verificationCode);
 
-        return ResponseEntity.ok(SignupResponse.success(user.getId().toString(), signupDto.getRole(),user.getEmail()));
+        return ResponseEntity.ok(SignupResponse.success(user.getId().toString(), signupDto.getRole(), user.getEmail()));
     }
 
 
-    public ResponseEntity<VerificationResponse> verifyEmail(OtpRequest otpRequest,HttpServletResponse response) {
+    public ResponseEntity<VerificationResponse> verifyEmail(OtpRequest otpRequest, HttpServletResponse response) {
         System.out.println("For Verification " + otpRequest);
         UUID userId = otpRequest.getUserId();
         Users user = userRepository.findById(userId)
@@ -134,8 +144,6 @@ public class AuthService {
         response.addCookie(cookie);
 
 
-
-
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(VerificationResponse.success(token, UserRole.valueOf(user.getRole())));
@@ -158,7 +166,7 @@ public class AuthService {
         return serviceProviderService.createServiceProvider(userId, profileDto);
     }
 
-    public AuthResponse login(LoginRequest request,HttpServletResponse response) throws AuthException {
+    public AuthResponse login(LoginRequest request, HttpServletResponse response) throws AuthException {
 
         Users user = userRepository.findByEmail(request.getEmail());
 
@@ -176,6 +184,35 @@ public class AuthService {
             return new AuthResponse(false, "Invalid credentials");
         }
 
+        boolean isProfileFullyComplete = false;
+        switch (user.getRole()) {
+            case "RESIDENT":
+                Optional<Resident> resident = residentRepository.findById(user.getId());
+                if (resident.isPresent()) {
+                    isProfileFullyComplete = true;
+                }
+                break;
+            case "ADMIN": // Society Admin
+                Optional<Admin> admin=adminRepository.findById(user.getId());
+                if (admin.isPresent()) {
+                    isProfileFullyComplete = true;
+                }
+                break;
+            case "PLATFORM_ADMIN":
+                Optional<PlatformAdmin> platformAdmin=platformAdminRepository.findById(user.getId());
+                if (platformAdmin.isPresent()) {
+                    isProfileFullyComplete = true;
+                }
+                break;
+            case "SERVICE_PROVIDER":
+                Optional<ServiceProvider> serviceProvider=serviceProviderRepository.findById(user.getId());
+                if (serviceProvider.isPresent()) {
+                    isProfileFullyComplete = true;
+                }
+                break;
+            default:
+                isProfileFullyComplete = false; // Default to false for unknown roles or if no specific check is defined
+        }
 
         // Generate JWT token
         String token = jwtService.generateToken(user.getEmail(), user.getRole(), user.getId());
@@ -197,7 +234,7 @@ public class AuthService {
         response.addCookie(cookie);
 
 
-        return new AuthResponse(true, "Login successful", token, userDto);
+        return new AuthResponse(true, "Login successful", token, userDto,isProfileFullyComplete);
     }
 
     public UserDto findMe(UUID userId) {
@@ -211,6 +248,7 @@ public class AuthService {
                 .build();
         return dto;
     }
+
     public String getCurrentUserId() {
         System.out.println("hey");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
