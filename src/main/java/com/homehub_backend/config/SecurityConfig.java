@@ -48,6 +48,7 @@ public class SecurityConfig {
 //                        .requestMatchers("/**").permitAll()
 
                         .anyRequest().authenticated())
+
                 .formLogin(form -> form.disable()) // disable form login
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -75,11 +76,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",          // <--- MUST be here
+                "http://localhost:5173",
                 "http://18.232.250.255:8081",
-                "https://homehub.ninja",          // <--- ADD THIS LINE FOR YOUR NEW ROOT DOMAIN
-                "https://www.homehub.ninja"       ,
-                "https://homehub.social",          // <--- ADD THIS LINE FOR YOUR NEW ROOT DOMAIN
+                "https://homehub.ninja",
+                "https://www.homehub.ninja",
+                "https://homehub.social",
                 "https://www.homehub.social"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
