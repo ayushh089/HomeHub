@@ -17,7 +17,7 @@ RUN mvn clean package -DskipTests
 
 # ---- Stage 2: Create the final, lightweight image ----
 # Use a slim JRE (Java Runtime Environment) image, not a full JDK.
-FROM amazoncorretto:17-al2-jre
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-jre-al2
 
 # Set the working directory
 WORKDIR /app
