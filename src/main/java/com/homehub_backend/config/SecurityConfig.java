@@ -84,6 +84,7 @@ public class SecurityConfig {
                 "https://www.homehub.social"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
