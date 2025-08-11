@@ -44,12 +44,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/auth/**","/api/v2/admin/location/states","/api/v2/admin/location/districts/**").permitAll()
-
-//                        .requestMatchers("/**").permitAll()
-
                         .anyRequest().authenticated())
 
-                .formLogin(form -> form.disable()) // disable form login
+                .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

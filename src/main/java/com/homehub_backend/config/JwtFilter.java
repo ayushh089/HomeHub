@@ -31,7 +31,6 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        // ✅ Skip JWT processing for public endpoints
         if (path.startsWith("/auth")) {
             filterChain.doFilter(request, response);
             return;
@@ -66,14 +65,11 @@ public class JwtFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
-                // Optionally log or handle token expiry (e.g. send error response or just skip auth)
                 System.out.println("Token expired: " + e.getMessage());
-                // You could set an attribute or header if you want the controller to know
             } catch (Exception e) {
                 System.out.println("Invalid token: " + e.getMessage());
             }
         }
-
         filterChain.doFilter(request, response);
     }
 

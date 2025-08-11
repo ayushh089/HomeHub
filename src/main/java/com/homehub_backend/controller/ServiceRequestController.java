@@ -50,7 +50,6 @@ public class ServiceRequestController {
         return ResponseEntity.ok(serviceRequestService.createAndSubmitRequest(requestDTO,files, resident.getId()));
     }
 
-    // In ServiceRequestController
 
     @GetMapping
     public ResponseEntity<List<ResidentServiceRequestDTO>> getServiceRequestsForResident(Authentication authentication) {

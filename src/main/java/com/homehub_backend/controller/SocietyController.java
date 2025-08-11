@@ -22,7 +22,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/society")
-//@PreAuthorize("hasRole('PLATFORM_ADMIN')")
 public class SocietyController {
 
     @Autowired

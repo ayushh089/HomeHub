@@ -79,8 +79,6 @@ public class ResidentService {
       return ResponseEntity.ok(response);
     }
 
-
-
     public ResponseEntity<Void> deleteResident(UUID id) {
         if (!residentRepository.existsById(id)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -95,3 +93,4 @@ public class ResidentService {
     }
 
 }
+

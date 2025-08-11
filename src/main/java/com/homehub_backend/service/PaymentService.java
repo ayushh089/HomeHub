@@ -108,7 +108,7 @@ public class PaymentService {
         return String.format(
                 "https://checkout.razorpay.com/v1?key=%s&amount=%d&currency=INR&order_id=%s&name=%s&description=%s",
                 razorpayKeyId,
-                amount.multiply(new BigDecimal(100)).intValue(), // Convert to paise
+                amount.multiply(new BigDecimal(100)).intValue(),
                 orderId,
                 URLEncoder.encode(businessName, StandardCharsets.UTF_8),
                 URLEncoder.encode(paymentDescription, StandardCharsets.UTF_8)
@@ -155,10 +155,8 @@ public class PaymentService {
 
             return true;
         } catch (Exception e) {
-            // Log the error and mark transaction as failed if needed
             PaymentTransaction transaction = paymentTransactionRepository.findByRazorpayOrderId(razorpayOrderId)
                     .orElse(null);
-
             if (transaction != null) {
                 transaction.setStatus(PaymentTransaction.PaymentStatus.FAILED);
                 paymentTransactionRepository.save(transaction);
